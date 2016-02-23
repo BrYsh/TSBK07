@@ -9,8 +9,6 @@ in  vec3 in_Position;
 in  vec3 in_Normal;
 // Phong
 uniform vec3 lightSourcesDirPosArr[4];
-uniform vec3 lightSourcesColorArr[4];
-uniform float specularExponent[4];
 uniform bool isDirectional[4];
 //End Phong
 in  vec2 inTexCoord;
@@ -34,22 +32,14 @@ void main(void)
     
     model_pos = Camera * mdlMatrix * vec4(in_Position, 1.0);
 
-//    for( int i = 0; i < 4; i++){
-//        if(isDirectional[i] == false){
-//        s_pos[i] = vec3(Camera * vec4(lightSourcesDirPosArr[i],1.0));
-//        }
-//        else{
-//        s_pos[i] = mat3(Camera) * lightSourcesDirPosArr[i];
-//        }
-//  }
-    s_pos[0] = vec3(Camera * vec4(10.0f, 5.0f, 0.0f,1.0));
-    s_pos[1] = vec3(Camera * vec4(0.0f, 5.0f, 10.0f,1.0));
-    s_pos[2] = mat3(Camera) * vec3(-1.0f, 0.0f, 0.0f);
-    s_pos[3] = mat3(Camera) * vec3(0.0f, 0.0f, -1.0f);
+    for( int i = 0; i < 4; i++){
+        if(isDirectional[i] == false){
+        s_pos[i] = vec3(Camera * vec4(lightSourcesDirPosArr[i] ,1.0));
+        }
+        else{
+        s_pos[i] = mat3(Camera) * lightSourcesDirPosArr[i];
+        }
+  }
     
-    
-    
-
-
     
 }

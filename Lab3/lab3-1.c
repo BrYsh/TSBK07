@@ -125,7 +125,8 @@ void KeyEvent(){
         
         camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
     }
-    else if(glutKeyIsDown('w')) {
+    
+    if(glutKeyIsDown('w')) {
         
         float tlx = cos(yaw)*cos(pitch);
         float tly = sin(pitch);
@@ -187,6 +188,23 @@ GLuint conctex;
 GLuint groundtex;
 GLuint skytex;
 
+Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
+    {0.0f, 1.0f, 0.0f}, // Green light
+    {0.0f, 0.0f, 1.0f}, // Blue light
+    {1.0f, 1.0f, 1.0f} }; // White light
+
+GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
+GLint isDirectional[] = {0,0,1,1};
+
+Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
+    {0.0f, 5.0f, 10.0f}, // Green light, positional
+    {-1.0f, 0.0f, 0.0f}, // Blue light along X
+    {0.0f, 0.0f, -1.0f} }; // White light along Z
+
+
+
+
+
 void init(void)
 {
 	// vertex buffer object, used for uploading the geometry
@@ -229,23 +247,10 @@ void init(void)
     LoadTGATextureSimple("dirt.tga", &conctex);
     LoadTGATextureSimple("SkyBox512.tga", &skytex);
     
-    //Speccular Phong shading
-    Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f},
-                                        {0.0f, 1.0f, 0.0f},
-                                        {0.0f, 0.0f, 1.0f},
-                                        {1.0f, 1.0f, 1.0f} }; // White light
-    
-    GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
-    GLint isDirectional[] = {0,0,1,1};
-    
-    Point3D lightSourcesDirectionsPositions[] = {{10.0f, 5.0f, 0.0f},
-                                                {0.0f, 5.0f, 10.0f},
-                                                {-1.0f, 0.0f, 0.0f},
-                                                {0.0f, 0.0f, -1.0f} };
+
     
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
     glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
-    
     glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
     glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
@@ -255,6 +260,7 @@ void init(void)
 }
 
 GLfloat t = 0.0;
+
 
 void display(void)
 {
@@ -268,12 +274,7 @@ void display(void)
     cameraSky.m[7] = 0;
     cameraSky.m[11] = 0;
     
-    glUseProgram(program);
-    glUniformMatrix4fv(glGetUniformLocation(program, "rotationMatrix2"), 1, GL_TRUE, rotationMatrix2);
-    glUniformMatrix4fv(glGetUniformLocation(program, "rotationMatrix"), 1, GL_TRUE, rotationMatrix);
-    glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix);
-    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
-    glUniformMatrix4fv(glGetUniformLocation(program, "Camera"), 1, GL_TRUE, camera.m);
+
 
     
     glUseProgram(programSky);
@@ -310,6 +311,21 @@ void display(void)
     DrawModel(sky,programSky,"in_Position",NULL,"inTexCoord");
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    
+    
+    glUseProgram(program);
+    glUniformMatrix4fv(glGetUniformLocation(program, "rotationMatrix2"), 1, GL_TRUE, rotationMatrix2);
+    glUniformMatrix4fv(glGetUniformLocation(program, "rotationMatrix"), 1, GL_TRUE, rotationMatrix);
+    glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix);
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    glUniformMatrix4fv(glGetUniformLocation(program, "Camera"), 1, GL_TRUE, camera.m);
+    
+
+    
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
+    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
+    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
     
     
@@ -320,7 +336,7 @@ void display(void)
     rot = Rz(M_PI/2);
     //Ground
     glBindTexture(GL_TEXTURE_2D, groundtex);
-    glUniform1i(glGetUniformLocation(program, "groundtex"), 0);
+    glUniform1i(glGetUniformLocation(program, "tex"), 0);
     total = Mult(gtrans, rot);
     total = Mult(trans,total);
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
