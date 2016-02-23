@@ -1,0 +1,24 @@
+# Exported from Wings 3D 0.98.26b
+mtllib cube.mtl
+o cube1
+#8 vertices, 6 faces
+v -50 0 -50
+v 50 0 -50
+v -50 0 50
+v 50 0 50
+
+vn 0 1 0
+vn 0 1 0
+vn 0 1 0
+vn 0 1 0
+
+vt 0.0 1.0
+vt 1.0 0.0
+
+g ground1_default
+usemtl default
+f 1 2 4 3
+
+
+#f 5/1/5 1/2/1 2/3/2 6/4/6
+
