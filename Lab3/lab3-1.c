@@ -195,6 +195,7 @@ Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 
 GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
 GLint isDirectional[] = {0,0,1,1};
+GLint mult_tex_bool[] = {1};
 
 Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
     {0.0f, 5.0f, 10.0f}, // Green light, positional
@@ -335,14 +336,36 @@ void display(void)
     mat4 gtrans = T(0, 0, 0);
     rot = Rz(M_PI/2);
     //Ground
-    glBindTexture(GL_TEXTURE_2D, groundtex);
-    glUniform1i(glGetUniformLocation(program, "tex"), 0);
+    
+    //
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D,conctex);
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(program, "tex0"), 0);
+    
+    
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D,groundtex);
+    glActiveTexture(GL_TEXTURE1);
+    glUniform1i(glGetUniformLocation(program, "tex1"), 1);
+    mult_tex_bool[0] = 1;
+
+    glUniform1iv(glGetUniformLocation(program, "muti_tex_bool"), 1, mult_tex_bool);
+    
+//    glGenTextures(0, &conctex);
+//    glGenTextures(1, &groundtex);
+    
+    mult_tex_bool[0] = 0;
+    //
+    //glUniform1i(glGetUniformLocation(program, "tex"), 0);
+
     total = Mult(gtrans, rot);
     total = Mult(trans,total);
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(ground,program,"in_Position","in_Normal","inTexCoord");
     //
-
+    glUniform1iv(glGetUniformLocation(program, "muti_tex_bool"), 1, mult_tex_bool);
     
     glBindTexture(GL_TEXTURE_2D, conctex);
     glActiveTexture(GL_TEXTURE0);
@@ -408,9 +431,9 @@ void display(void)
     total = Mult(ttrans, rot);
     total = Mult(trans,total);
     
-    glBindTexture(GL_TEXTURE_2D, conctex);
+    glBindTexture(GL_TEXTURE_2D, skytex);
     glActiveTexture(GL_TEXTURE0);
-    glUniform1i(glGetUniformLocation(program, "conctex"), 0);
+    glUniform1i(glGetUniformLocation(program, "tex"), 0);
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(bunny,program,"in_Position","in_Normal","inTexCoord");
     

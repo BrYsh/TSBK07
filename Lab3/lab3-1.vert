@@ -18,6 +18,7 @@ uniform mat4 mdlMatrix;
 out vec3 ex_Normal;
 out vec2 intpTexCoord;
 out vec4 model_pos;
+out vec4 model_pos2;
 out vec3 s_pos[4];
 
 
@@ -31,6 +32,7 @@ void main(void)
     intpTexCoord = inTexCoord;
     
     model_pos = Camera * mdlMatrix * vec4(in_Position, 1.0);
+    model_pos2 = vec4(in_Position, 1.0);
 
     for( int i = 0; i < 4; i++){
         if(isDirectional[i] == false){
