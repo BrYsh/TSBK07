@@ -1,10 +1,12 @@
-# set this variable to the director in which you saved the common files
-commondir = ../common/
+all : lab4-1 
 
-all : lab4-1
+init=  -Wall -std=c99
 
-lab4-1 : lab4-1.c $(commondir)GL_utilities.c $(commondir)VectorUtils3.c $(commondir)loadobj.c $(commondir)LoadTGA.c $(commondir)Linux/MicroGlut.c
-	gcc -Wall -o lab4-1 -I$(commondir) -I../common/Linux -lGL -DGL_GLEXT_PROTOTYPES lab4-1.c $(commondir)GL_utilities.c $(commondir)loadobj.c $(commondir)VectorUtils3.c $(commondir)LoadTGA.c $(commondir)Linux/MicroGlut.c -lXt -lX11
+fw= -DGL_GLEXT_PROTOTYPES -lm -framework OpenGL -framework Cocoa -I/opt/X11/include MicroGlut.m GL_utilities.c loadobj.c LoadTGA.c VectorUtils3.c
+
+lab4-1: lab4-1.c GL_utilities.c 
+	gcc $(init) -o lab4-1 $(fw) lab4-1.c  
 
 clean :
 	rm lab4-1
+
