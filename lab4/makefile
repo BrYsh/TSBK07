@@ -1,4 +1,4 @@
-all : lab4-1 lab4-2 lab4-3 
+all : lab4-1 lab4-2 lab4-3 lab4-4
 
 init=  -Wall -std=c99
 
@@ -11,8 +11,11 @@ lab4-2: lab4-2.c GL_utilities.c
 	gcc $(init) -o lab4-2 $(fw) lab4-2.c
  
 lab4-3: lab4-3.c GL_utilities.c 
-	gcc $(init) -o lab4-3 $(fw) lab4-3.c  
+	gcc $(init) -o lab4-3 $(fw) lab4-3.c
+
+lab4-4: lab4-4.c GL_utilities.c 
+	gcc $(init) -o lab4-4 $(fw) lab4-4.c  
 
 clean :
-	rm lab4-1 lab4-2 lab4-3 
+	rm lab4-1 lab4-2 lab4-3 lab4-4 
 
