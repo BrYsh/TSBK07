@@ -12,6 +12,120 @@
 #include "LoadTGA.h"
 
 mat4 projectionMatrix;
+mat4 camera;
+
+GLfloat tx = 0;
+GLfloat ty = 0;
+GLfloat tz = -1;
+GLfloat lx = 0;
+GLfloat ly = 0;
+GLfloat lz = 0;
+GLfloat yaw = 0.0;
+GLfloat pitch = 0.0;
+GLfloat speed = 0.5;
+GLfloat strafex = 0.0;
+GLfloat strafez = 0.0;
+
+void KeyEvent(){
+    if(glutKeyIsDown('i')) {
+        pitch = pitch + speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('k')) {
+        pitch = pitch - speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('j')) {
+        yaw = yaw - speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('l')) {
+        yaw = yaw + speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    
+    if(glutKeyIsDown('w')) {
+        
+        float tlx = cos(yaw)*cos(pitch);
+        float tly = sin(pitch);
+        float tlz = sin(yaw)*cos(pitch);
+        
+        tx = tx + speed*lx;
+        ty = ty + speed*ly;
+        tz = tz + speed*lz;
+        
+        camera = lookAt(tx,ty,tz, tx + tlx ,ty + tly , tlz + tz , 0,1,0);
+        
+    }
+    else if(glutKeyIsDown('s')) {
+        float tlx = cos(yaw)*cos(pitch);
+        float tly = sin(pitch);
+        float tlz = sin(yaw)*cos(pitch);
+        
+        tx = tx + -speed*lx;
+        ty = ty + -speed*ly;
+        tz = tz + -speed*lz;
+        
+        camera = lookAt(tx,ty,tz, tx + tlx ,ty + tly , tlz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('a')) {
+        
+        tx = tx + speed*strafex;
+        tz = tz + speed*strafez;
+        
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+        
+    }
+    else if(glutKeyIsDown('d')) {
+        tx = tx + -speed*strafex;
+        tz = tz + -speed*strafez;
+        
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+}
+
 
 Model* GenerateTerrain(TextureData *tex)
 {
@@ -98,7 +212,7 @@ void init(void)
 	
 // Load terrain data
 	
-	LoadTGATextureData("44-terrain.tga", &ttex);
+	LoadTGATextureData("fft-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	printError("init terrain");
 }
@@ -107,7 +221,7 @@ void display(void)
 {
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+    KeyEvent();
 	mat4 total, modelView, camMatrix;
 	
 	printError("pre display");
@@ -122,8 +236,12 @@ void display(void)
 				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
 				0.0, 1.0, 0.0);
 	modelView = IdentityMatrix();
-	total = Mult(camMatrix, modelView);
+    
+    mat4 gtrans = T(0, 0, 0);
+    mat4 rot = Ry(M_PI/4);
+    total = Mult(gtrans, rot);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    glUniformMatrix4fv(glGetUniformLocation(program, "Camera"), 1, GL_TRUE, camera.m);
 	
 	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
@@ -153,7 +271,6 @@ int main(int argc, char **argv)
 	glutCreateWindow ("TSBK07 Lab 4");
 	glutDisplayFunc(display);
 	init ();
-	initKeymapManager();
 	glutTimerFunc(20, &timer, 0);
 
 	glutPassiveMotionFunc(mouse);

@@ -13,6 +13,120 @@
 
 mat4 projectionMatrix;
 
+mat4 camera;
+GLfloat tx = 0;
+GLfloat ty = 0;
+GLfloat tz = -1;
+GLfloat lx = 0;
+GLfloat ly = 0;
+GLfloat lz = 0;
+GLfloat yaw = 0.0;
+GLfloat pitch = 0.0;
+GLfloat speed = 0.5;
+GLfloat strafex = 0.0;
+GLfloat strafez = 0.0;
+
+void KeyEvent(){
+    if(glutKeyIsDown('i')) {
+        pitch = pitch + speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('k')) {
+        pitch = pitch - speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('j')) {
+        yaw = yaw - speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('l')) {
+        yaw = yaw + speed*0.1;
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+    
+    if(glutKeyIsDown('w')) {
+        
+        float tlx = cos(yaw)*cos(pitch);
+        float tly = sin(pitch);
+        float tlz = sin(yaw)*cos(pitch);
+        
+        tx = tx + speed*lx;
+        ty = ty + speed*ly;
+        tz = tz + speed*lz;
+        
+        camera = lookAt(tx,ty,tz, tx + tlx ,ty + tly , tlz + tz , 0,1,0);
+        
+    }
+    else if(glutKeyIsDown('s')) {
+        float tlx = cos(yaw)*cos(pitch);
+        float tly = sin(pitch);
+        float tlz = sin(yaw)*cos(pitch);
+        
+        tx = tx + -speed*lx;
+        ty = ty + -speed*ly;
+        tz = tz + -speed*lz;
+        
+        camera = lookAt(tx,ty,tz, tx + tlx ,ty + tly , tlz + tz , 0,1,0);
+    }
+    else if(glutKeyIsDown('a')) {
+        
+        tx = tx + speed*strafex;
+        tz = tz + speed*strafez;
+        
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+        
+    }
+    else if(glutKeyIsDown('d')) {
+        tx = tx + -speed*strafex;
+        tz = tz + -speed*strafez;
+        
+        lx = cos(yaw) * cos(pitch);
+        ly = sin(pitch);
+        lz = sin(yaw) * cos(pitch);
+        
+        strafex = cos(yaw - M_PI_2);
+        strafez = sin(yaw - M_PI_2);
+        
+        camera = lookAt(tx,ty,tz, tx + lx ,ty + ly , lz + tz , 0,1,0);
+    }
+}
+
+
 Model* GenerateTerrain(TextureData *tex)
 {
 	int vertexCount = tex->width * tex->height;
@@ -79,6 +193,10 @@ TextureData ttex; // terrain
 
 void init(void)
 {
+    
+    camera = lookAt(0.0,2.0,-8.0,
+                    0.0,0.0,0.0,
+                    0.0,1.0,0.0);
 	// GL inits
 	glClearColor(0.2,0.2,0.5,0);
 	glEnable(GL_DEPTH_TEST);
@@ -116,11 +234,13 @@ void display(void)
 
 	// Build matrix
 	
-	vec3 cam = {0, 5, 8};
-	vec3 lookAtPoint = {2, 0, 2};
-	camMatrix = lookAt(cam.x, cam.y, cam.z,
-				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
-				0.0, 1.0, 0.0);
+//	vec3 cam = {0, 5, 8};
+//	vec3 lookAtPoint = {2, 0, 2};
+//	camMatrix = lookAt(cam.x, cam.y, cam.z,
+//				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
+//				0.0, 1.0, 0.0);
+    camMatrix = camera;
+    
 	modelView = IdentityMatrix();
 	total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);

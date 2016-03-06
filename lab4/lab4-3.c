@@ -10,6 +10,8 @@
 #include "VectorUtils3.h"
 #include "loadobj.h"
 #include "LoadTGA.h"
+#include <math.h>
+
 
 mat4 projectionMatrix, camera;
 
@@ -30,7 +32,7 @@ Model* GenerateTerrain(TextureData *tex)
 		{
 // Vertex array. You need to scale this properly
 			vertexArray[(x + z * tex->width)*3 + 0] = x / 1.0;
-			vertexArray[(x + z * tex->width)*3 + 1] = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / 10.0;
+			vertexArray[(x + z * tex->width)*3 + 1] = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / 200.0;
 			vertexArray[(x + z * tex->width)*3 + 2] = z / 1.0;
             
             
@@ -93,6 +95,39 @@ Model* GenerateTerrain(TextureData *tex)
 	return model;
 }
 
+GLfloat height_controll(GLfloat xf, GLfloat zf,TextureData *tex,Model* M){
+    
+    int x = floor(xf);
+    int z = floor(zf);
+    
+    GLfloat dx = xf - (GLfloat)x;
+    GLfloat dz = zf - (GLfloat)z;
+    
+    GLfloat w11 = (1.0-dx)*(1.0-dz);
+    GLfloat w12 = dx*(1.0-dz);
+    GLfloat w21 = (1.0-dx)*dz;
+    GLfloat w22 = dx*dz;
+    
+    GLfloat y11,y12,y21,y22;
+    vec4 VertexIndex;
+    //Quad indexnumber
+    VertexIndex.x = M->indexArray[(x + z * (tex->width-1))*6 + 0];
+    VertexIndex.y = M->indexArray[(x + z * (tex->width-1))*6 + 1];
+    VertexIndex.z = M->indexArray[(x + z * (tex->width-1))*6 + 2];
+    VertexIndex.w = M->indexArray[(x + z * (tex->width-1))*6 + 5];
+    
+    
+    y11 = M->vertexArray[((int)VertexIndex.x)*3 + 1];
+    y21 = M->vertexArray[((int)VertexIndex.y)*3 + 1];
+    y12 = M->vertexArray[((int)VertexIndex.z)*3 + 1];
+    y22 = M->vertexArray[((int)VertexIndex.w)*3 + 1];
+    
+    return (w11*y11 + w12*y12 + w21*y21 + w22*y22);
+    
+    
+    
+}
+
 
 
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
@@ -114,7 +149,7 @@ Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light,
 
 GLfloat tx = 0;
 GLfloat ty = 0;
-GLfloat tz = -1;
+GLfloat tz = 0;
 GLfloat lx = 0;
 GLfloat ly = 0;
 GLfloat lz = 0;
@@ -226,7 +261,6 @@ void KeyEvent(){
 
 
 
-
 // vertex array object
 Model *m, *m2, *tm;
 // Reference to shader program
@@ -236,10 +270,12 @@ TextureData ttex; // terrain
 
 void init(void)
 {
+
     camera = lookAt(0.0,2.0,-8.0,
                     0.0,0.0,0.0,
                     0.0,1.0,0.0);
     
+
 	// GL inits
 	glClearColor(0.2,0.2,0.5,0);
 	glEnable(GL_DEPTH_TEST);
@@ -259,23 +295,20 @@ void init(void)
 	
 // Load terrain data
 	
-	LoadTGATextureData("fft-terrain.tga", &ttex);
+	LoadTGATextureData("44-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	printError("init terrain");
-
-//    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
-//    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
-//    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
-//    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
 }
 
 void display(void)
 {
+
     KeyEvent();
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+
 	mat4 total, modelView, camMatrix;
 	
 	printError("pre display");
@@ -290,11 +323,14 @@ void display(void)
 				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
 				0.0, 1.0, 0.0);
 	modelView = IdentityMatrix();
+
 	total = Mult(camMatrix, modelView);
+
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     glUniformMatrix4fv(glGetUniformLocation(program, "Camera"), 1, GL_TRUE, camera.m);
 	
 	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
+
 	
     //rotate ground
     mat4 rot = Ry(M_PI_2/4);
@@ -303,6 +339,7 @@ void display(void)
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     
     DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
+
 
 	printError("display 2");
 	
@@ -315,10 +352,12 @@ void timer(int i)
 	glutPostRedisplay();
 }
 
+
 //void mouse(int x, int y)
 //{
 //	printf("%d %d\n", x, y);
 //}
+
 
 int main(int argc, char **argv)
 {
@@ -331,7 +370,6 @@ int main(int argc, char **argv)
 	init ();
 	glutTimerFunc(20, &timer, 0);
 
-	//glutPassiveMotionFunc(mouse);
 
 	glutMainLoop();
 	exit(0);
