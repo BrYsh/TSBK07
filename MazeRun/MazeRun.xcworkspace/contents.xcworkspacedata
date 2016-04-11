@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "container:"
+      name = "TGA">
+      <FileRef
+         location = "group:TGA/fft-terrain.tga">
+      </FileRef>
+      <FileRef
+         location = "group:TGA/maskros512.tga">
+      </FileRef>
+      <FileRef
+         location = "group:TGA/conc.tga">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"
+      name = "OBJ">
+      <FileRef
+         location = "group:OBJ/groundsphere.obj">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"
+      name = "MG">
+      <FileRef
+         location = "group:MG/MicroGlut.m">
+      </FileRef>
+      <FileRef
+         location = "group:MG/MicroGlut.h">
+      </FileRef>
+      <FileRef
+         location = "group:MG/GL_utilities.c">
+      </FileRef>
+      <FileRef
+         location = "group:MG/GL_utilities.h">
+      </FileRef>
+      <FileRef
+         location = "group:MG/loadobj.c">
+      </FileRef>
+      <FileRef
+         location = "group:MG/loadobj.h">
+      </FileRef>
+      <FileRef
+         location = "group:MG/LoadTGA.c">
+      </FileRef>
+      <FileRef
+         location = "group:MG/LoadTGA.h">
+      </FileRef>
+      <FileRef
+         location = "group:MG/VectorUtils3.c">
+      </FileRef>
+      <FileRef
+         location = "group:MG/VectorUtils3.h">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"
+      name = "Game">
+      <FileRef
+         location = "group:Game/game.hpp">
+      </FileRef>
+      <FileRef
+         location = "group:Game/game.cpp">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"
+      name = "Maze">
+      <FileRef
+         location = "group:Maze/maze.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:Maze/maze.hpp">
+      </FileRef>
+   </Group>
+   <FileRef
+      location = "group:/Users/Andreas/Skola/TSBK07/Lab/TSBK07/MazeRun/main.cpp">
+   </FileRef>
+</Workspace>
