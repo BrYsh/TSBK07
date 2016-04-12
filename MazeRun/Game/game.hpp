@@ -29,35 +29,55 @@ public:
     //Model* GenerateTerrain(char type);
     GLfloat height_controll();
     void jump_controll();
+    void turn_controll();
+    void check_turn_key();
 //    void update_speed_dir();
 //    void jump_check();
     void ball_dir();
     void update();
+    void turn_update(std::string);
     mat4 update_camera();
 //    void display(void);
     
     int a;
     int width_, height_;
     
+    mat4 strans;
+    mat4 total;
+    
     
 
     
     bool jump;
     bool turn;
+    int turn_wait = 0;
     int jump_count;
+    int global_dir;
+    
     GLfloat ball_angle;
     GLfloat ball_speed;
+    GLfloat ball_speed_global;
     
     GLfloat x_pos;
     GLfloat y_pos;
     GLfloat z_pos;
     
+    GLfloat x_pos_tot;
+    GLfloat y_pos_tot;
+    GLfloat z_pos_tot;
+    
+    GLfloat strafe;
+    
     GLfloat x_pos_c;
     GLfloat y_pos_c;
     GLfloat z_pos_c;
     
-    mat4 strans;
-    GLfloat camera_control;
+    GLfloat turn_angle;
+    GLfloat pol_dir;
+    
+    GLfloat camera_control_x;
+    GLfloat camera_control_y;
+    GLfloat camera_control_z;
     
     Maze* maze;
     Model* current_track;

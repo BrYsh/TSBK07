@@ -15,22 +15,30 @@
 Game::Game(){
     
     a = 1;
-    width_ = 100;
+    width_ = 50;
     height_ = 9;
     
     jump = false;
     turn = false;
     jump_count = 0;
     ball_angle = 0;
-    ball_speed = 0.5;
+    ball_speed_global = 0.1;
+    ball_speed = ball_speed_global;
     
     x_pos = 0.0;
-    y_pos = 4.0;
+    y_pos = 0.0;
     z_pos = 0.0;
     
     x_pos_c = 0;
     y_pos_c = 0;
     z_pos_c = 0;
+    
+        x_pos_c = x_pos_tot - 7*cos(ball_angle);
+        z_pos_c = z_pos_tot - 7*sin(ball_angle);
+    
+    strafe = 0;
+    
+    global_dir = 0;
     
     strans = T(x_pos, y_pos, z_pos);
     
@@ -55,23 +63,41 @@ void Game::update(){
     x_pos = x_pos + ball_speed*cos(ball_angle);
     z_pos = z_pos + ball_speed*sin(ball_angle);
     
+    x_pos_tot = x_pos + strafe*sin(-ball_angle);
+    z_pos_tot = z_pos + strafe*cos(-ball_angle);
+    
     if (jump) {
         jump_controll();
     }
     else{
         y_pos = height_controll();
     }
+    if (turn) {
+        turn_controll();
+    }
     
-    strans = T(x_pos, y_pos, z_pos);
-    x_pos_c = x_pos -7*cos(ball_angle);
-    z_pos_c = z_pos -7*sin(ball_angle);
-    camera_control = height_controll() + 3;
+    strans = T(x_pos_tot, y_pos, z_pos_tot);
+//    x_pos_c = x_pos_tot - 7*cos(ball_angle);
+//    z_pos_c = z_pos_tot - 7*sin(ball_angle);
+    
+    camera_control_x = x_pos_tot - 7*cos(ball_angle);
+    camera_control_z = z_pos_tot - 7*sin(ball_angle);
+
+    camera_control_y = height_controll() + 3;
 
     
-    GLfloat dist = y_pos_c - camera_control;
+    GLfloat dist = x_pos_c - camera_control_x;
+    x_pos_c -= dist/2.0*0.25;
+    
+    dist = z_pos_c - camera_control_z;
+    z_pos_c -= dist/2.0*0.25;
+    
+    dist = y_pos_c - camera_control_y;
     y_pos_c -= dist/2.0*0.25;
     
+    std::cout << strafe << std::endl;
     
+    total = strans;
     
 }
 
@@ -79,7 +105,7 @@ void Game::update(){
 mat4 Game::update_camera(){
     
     return lookAt(x_pos_c,y_pos_c,z_pos_c,
-                  x_pos,y_pos+3,z_pos,
+                  x_pos_tot,y_pos+3,z_pos_tot,
                   0.0,1.0,0.0);
 }
 
@@ -115,20 +141,47 @@ GLfloat Game::height_controll(){
 void Game::ball_dir(){
     
     if (jump) {
+        if (!turn) {
+            check_turn_key();
+        }
         return;
     }
     if (turn) {
         return;
     }
+
     if (glutKeyIsDown(' ')) {
         jump = true;
         jump_count = 0;
     }
+    
+    check_turn_key();
+    if (turn) {
+        return;
+    }
+    
     if(glutKeyIsDown(GLUT_KEY_LEFT)) {
-        ball_angle -= 0.015;
+        if (strafe > -2) {
+            strafe -= 0.1;
+        }
+        else
+        strafe = -2;
     }
     else if(glutKeyIsDown(GLUT_KEY_RIGHT)) {
-        ball_angle += 0.015;
+        if (strafe < 2) {
+            strafe += 0.1;
+        }
+        else
+        strafe = 2;
+    }
+    else{
+        if (strafe > 0) {
+            strafe -= 0.1;
+        }
+        else if(strafe<0)
+        strafe += 0.1;
+        else
+            strafe =0;
     }
     if(glutKeyIsDown(GLUT_KEY_UP)) {
         if (ball_speed < 0.72) {
@@ -139,6 +192,25 @@ void Game::ball_dir(){
         if (ball_speed > 0.02) {
             ball_speed -= 0.01;
         }
+    }
+    
+}
+
+void Game::check_turn_key(){
+    
+    if (glutKeyIsDown('c')) {
+        turn = true;
+        pol_dir = 1.0;
+        turn_angle = 1.0;
+        global_dir = ((global_dir+1)%4+4)%4;
+        return;
+    }
+    if (glutKeyIsDown('z')) {
+        turn = true;
+        pol_dir = -1.0;
+        turn_angle = 1.0;
+        global_dir = ((global_dir-1)%4+4)%4;
+        return;
     }
     
 }
@@ -160,8 +232,39 @@ void Game::jump_controll(){
     
 }
 
+void Game::turn_controll(){
+    
+    if (turn_wait > 0) {
+        turn_wait--;
+        return;
+    }
+    
+    GLfloat div= 12;
+    
+    if (turn_angle <= div){
+        ball_angle += M_PI_2 / div  * pol_dir;
+        turn_angle += 1.0;
+        ball_speed = ball_speed_global/2;
+    }
+    else{
+        turn = false;
+        turn_wait = 15;
+        ball_speed = ball_speed_global;
+        ball_angle = global_dir * M_PI_2;
+    }
+    
+}
 
-
+void turn_update(std::string turn_dir){
+    
+    // Global dir (klar)
+    // Byta hieghtcontroll <- auto när man byter current
+    // Ta bort trädet som inte svänges till
+    // Current = turn_maze
+    // skapa nya träd
+    
+    
+}
 
 
 

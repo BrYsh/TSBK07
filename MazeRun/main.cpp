@@ -39,7 +39,7 @@ Model* sphere;
 GLfloat t = 0;
 
 
-int width_ = 100, height_ = 9;
+int width_ = 50, height_ = 9;
 
 
 GLfloat tx = 0;
@@ -50,7 +50,7 @@ GLfloat ly = 0;
 GLfloat lz = 0;
 GLfloat yaw = 0.0;
 GLfloat pitch = 0.0;
-GLfloat speed = 0.5;
+GLfloat speed = 0.2;
 GLfloat strafex = 0.0;
 GLfloat strafez = 0.0;
 
@@ -151,10 +151,10 @@ void display(void)
     //    y_pos -= (y_pos - y_pos_des)/1*0.5;
     game_->update();
 
-    trans = T(0,0,0); // <<< --  Vart spheren är
-    rot = Rx(0);
-    rot = Ry(M_PI_2/4);
-    total = Mult(game_->strans, rot);
+    //trans = T(0,0,0); // <<< --  Vart spheren är
+    //rot = Rx(0);
+    //rot = Ry(M_PI_2/4);
+    total = game_->total;//Mult(game_->strans, rot);
 
     
     camera = game_->update_camera();

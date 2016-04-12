@@ -31,17 +31,17 @@ void Maze::generate_transform(){
     
     //current
     rot = Ry(-global_dir*M_PI/2);
-    trans = T(0 ,0 ,0 );
+    trans = T(0 ,0 ,-4 );
     total = Mult(trans,rot);
     
     //left
     left->rot = Ry(-left->global_dir*M_PI/2);
-    left->trans = T(length - width ,0 ,0 );
+    left->trans = T(length - width ,0 ,-4 );
     left->total = Mult(left->trans,left->rot);
     
     //Right
     right->rot = Ry(-right->global_dir*M_PI/2);
-    right->trans = T(length -1,0 ,width-1);
+    right->trans = T(length -1,0 ,width-1 -4);
     right->total = Mult(right->trans,right->rot);
     
 }
