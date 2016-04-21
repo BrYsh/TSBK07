@@ -52,6 +52,8 @@ public:
     
     bool jump;
     bool turn;
+    bool wait_turn_pos;
+    bool late_turn_2_death;
     int turn_wait = 0;
     int jump_count;
     int global_dir;

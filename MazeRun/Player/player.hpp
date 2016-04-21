@@ -36,6 +36,7 @@ public:
     bool jump;
     bool duck;
     
+    
     GLfloat leg_state_l;
     GLfloat leg_state_r;
     mat4 leg_angle;

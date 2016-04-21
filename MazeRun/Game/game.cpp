@@ -24,6 +24,8 @@ Game::Game(int w, int h){
     
     jump = false;
     turn = false;
+    late_turn_2_death = false;
+    wait_turn_pos = false;
     turn_steps = 8;
     jump_count = 0;
     world_angle = 0;
@@ -86,14 +88,29 @@ void Game::update(){
     else{
         y_pos_n = height_controll(maze->length,maze->width,x_pos,z_pos,offset,maze);
     }
+    if (!late_turn_2_death) {
     if (turn) {
+        if (wait_turn_pos) {
+            GLfloat to_centrum = length_ + x_pos - (width_-2)/2;
+            if (to_centrum <= 0) {
+                turn_angle = M_PI_2/turn_steps;
+                ball_speed = 0;
+                global_dir = ((global_dir-1)%4+4)%4;
+                world_angle += -turn_angle*pol_dir;
+                maze->update_turn(turn_angle*pol_dir,x_pos,z_pos);
+                wait_key = turn_steps-1;
+                wait_turn_pos = false;
+            }
+        }
+        else
         turn_controll();
     }
-    if (!(turn||jump)) {
-        world_dir();
-        x_pos += -ball_speed*cos(world_angle);
-        z_pos += -ball_speed*sin(world_angle);
     }
+    
+    world_dir();
+    x_pos += -ball_speed*cos(world_angle);
+    z_pos += -ball_speed*sin(world_angle);
+    
     
     
     world_trans = T(-ball_speed, -(y_pos_n-y_pos), 0);
@@ -109,8 +126,8 @@ void Game::update(){
 
 mat4 Game::update_camera(){
     
-    return lookAt(-15,8.5,strafe,
-                  0.0,8,strafe,
+    return lookAt(-15.5,8.5,strafe,
+                  0.0,6.0,strafe,
                   0.0,1.0,0.0);
 }
 
@@ -224,25 +241,25 @@ void Game::check_turn_key(){
     
     if (turn) {
         if (to_centrum < width_/2) {
-            if (to_centrum > 0){
+            if (to_centrum >= 0){
             std::cout << "Wait to turn = " << to_centrum  << std::endl;
-               // wait_turn_pos = true;
+               wait_turn_pos = true;
                 strafe_back(strafe_max/(turn_steps-1)); //<-- hur många delar rotare
             }
-            else if(to_centrum > -2.0){
-                std::cout << "Turn Direct!! = " << to_centrum  << std::endl;
-                // strafe -> 0 each turn
-            }
-            else{
-                //dead by too late;
+            else if(to_centrum < 0){
+                late_turn_2_death = true;
+                return;
             }
         }
-        turn_angle = M_PI_2/turn_steps;
-        ball_speed = 0;
-        global_dir = ((global_dir-1)%4+4)%4;
-        world_angle += -turn_angle*pol_dir;
-        maze->update_turn(turn_angle*pol_dir,x_pos,z_pos);
-        wait_key = turn_steps-1;
+        if (!wait_turn_pos) {
+            turn_angle = M_PI_2/turn_steps;
+            ball_speed = 0;
+            global_dir = ((global_dir-1)%4+4)%4;
+            world_angle += -turn_angle*pol_dir;
+            maze->update_turn(turn_angle*pol_dir,x_pos,z_pos);
+            wait_key = turn_steps-1;
+        }
+        
         return;
 
     }
