@@ -12,12 +12,14 @@
 #include <iostream>
 #include <string>
 #include <stdio.h>
+#include <stdlib.h>
 #include "../MG/MicroGlut.h"
 #include "../MG/GL_utilities.h"
 #include "../MG/VectorUtils3.h"
 #include "../MG/loadobj.h"
 #include "../MG/LoadTGA.h"
 #include "../Maze/maze.hpp"
+#include "../Player/player.hpp"
 
 
 class Game
@@ -25,27 +27,27 @@ class Game
     
 public:
     
-    Game();
-    //Model* GenerateTerrain(char type);
-    GLfloat height_controll();
+    Game(int,int);
+    //GLfloat height_controll();
     void jump_controll();
     void turn_controll();
     void check_turn_key();
-//    void update_speed_dir();
-//    void jump_check();
-    void ball_dir();
+
+    void world_dir();
     void update();
     void turn_update(std::string);
+    void update_maze_strafe();
     mat4 update_camera();
-//    void display(void);
+    void update_world();
+    void strafe_back(GLfloat pace);
     
     int a;
-    int width_, height_;
+    int width_, length_;
+    int wait_key;
     
-    mat4 strans;
+    mat4 world_trans;
+    mat4 strafe_trans;
     mat4 total;
-    
-    
 
     
     bool jump;
@@ -53,20 +55,30 @@ public:
     int turn_wait = 0;
     int jump_count;
     int global_dir;
+    int turn_steps;
     
-    GLfloat ball_angle;
+    GLfloat world_angle;
     GLfloat ball_speed;
     GLfloat ball_speed_global;
     
     GLfloat x_pos;
     GLfloat y_pos;
+    GLfloat y_pos_n;
     GLfloat z_pos;
     
     GLfloat x_pos_tot;
     GLfloat y_pos_tot;
     GLfloat z_pos_tot;
     
+    GLfloat worldpos_x;
+    GLfloat worldpos_z;
+    
+    GLfloat worldpos_x_tot;
+    GLfloat worldpos_z_tot;
+    
     GLfloat strafe;
+    GLfloat strafe_max;
+    GLfloat offset;
     
     GLfloat x_pos_c;
     GLfloat y_pos_c;
@@ -90,7 +102,7 @@ public:
     Model* rightright_t;
     Model* rightleft_t;
     
-
+    Player* player_;
     
 
     

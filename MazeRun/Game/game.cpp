@@ -12,35 +12,45 @@
 
 //Model* GenerateTerrain(char,int,int);
 
-Game::Game(){
+GLfloat height_controll(GLint length, GLint width, GLfloat xi, GLfloat yi,GLfloat offset,Maze* maze);
+
+Game::Game(int w, int h){
     
     a = 1;
-    width_ = 50;
-    height_ = 9;
+    width_ = h;
+    length_ = w;
+    offset = width_/2;
+    std::cout << "width_ = " << width_ << "  || length_ = " << length_ << std::endl;
     
     jump = false;
     turn = false;
+    turn_steps = 8;
     jump_count = 0;
-    ball_angle = 0;
-    ball_speed_global = 0.1;
+    world_angle = 0;
+    ball_speed_global = 0.00;
     ball_speed = ball_speed_global;
     
     x_pos = 0.0;
     y_pos = 0.0;
+    y_pos_n = y_pos;
     z_pos = 0.0;
     
-    x_pos_c = 0;
-    y_pos_c = 0;
+    x_pos_c = -10.0;
+    y_pos_c = 3;
     z_pos_c = 0;
     
-        x_pos_c = x_pos_tot - 7*cos(ball_angle);
-        z_pos_c = z_pos_tot - 7*sin(ball_angle);
+    x_pos = 0;
+    z_pos = 0;
+    
+    x_pos_c = x_pos - 7*cos(world_angle);
+    z_pos_c = z_pos - 7*sin(world_angle);
     
     strafe = 0;
+    strafe_max = 3;
     
     global_dir = 0;
     
-    strans = T(x_pos, y_pos, z_pos);
+    world_trans = T(x_pos, y_pos, z_pos);
     
     maze = new Maze(0,0);
     current_track = maze->track;
@@ -53,71 +63,65 @@ Game::Game(){
     rightright_t = maze->right->right->track;
     rightleft_t = maze->right->left->track;
     
+    player_ = new Player();
     
 }
 
 void Game::update(){
     
-    ball_dir();
     
-    x_pos = x_pos + ball_speed*cos(ball_angle);
-    z_pos = z_pos + ball_speed*sin(ball_angle);
+    player_->update();
     
-    x_pos_tot = x_pos + strafe*sin(-ball_angle);
-    z_pos_tot = z_pos + strafe*cos(-ball_angle);
+    //std::cout << "to middle turn = " << length_ + x_pos - (width_-2)/2 << std::endl;
+    
+
     
     if (jump) {
         jump_controll();
+        check_turn_key();
     }
     else{
-        y_pos = height_controll();
+        y_pos_n = height_controll(maze->length,maze->width,x_pos,z_pos,offset,maze);
     }
     if (turn) {
         turn_controll();
     }
+    if (!(turn||jump)) {
+        world_dir();
+        x_pos += -ball_speed*cos(world_angle);
+        z_pos += -ball_speed*sin(world_angle);
+    }
     
-    strans = T(x_pos_tot, y_pos, z_pos_tot);
-//    x_pos_c = x_pos_tot - 7*cos(ball_angle);
-//    z_pos_c = z_pos_tot - 7*sin(ball_angle);
     
-    camera_control_x = x_pos_tot - 7*cos(ball_angle);
-    camera_control_z = z_pos_tot - 7*sin(ball_angle);
+    world_trans = T(-ball_speed, -(y_pos_n-y_pos), 0);
+    y_pos = y_pos_n;
+    maze->update_pos(world_trans);
 
-    camera_control_y = height_controll() + 3;
+    
+    
+    total = world_trans;
 
-    
-    GLfloat dist = x_pos_c - camera_control_x;
-    x_pos_c -= dist/2.0*0.25;
-    
-    dist = z_pos_c - camera_control_z;
-    z_pos_c -= dist/2.0*0.25;
-    
-    dist = y_pos_c - camera_control_y;
-    y_pos_c -= dist/2.0*0.25;
-    
-    std::cout << strafe << std::endl;
-    
-    total = strans;
-    
 }
 
 
 mat4 Game::update_camera(){
     
-    return lookAt(x_pos_c,y_pos_c,z_pos_c,
-                  x_pos_tot,y_pos+3,z_pos_tot,
+    return lookAt(-25,10,strafe,
+                  0.0,1.0,strafe,
                   0.0,1.0,0.0);
 }
 
 
 
-GLfloat Game::height_controll(){
+GLfloat height_controll(GLint length, GLint width, GLfloat xi, GLfloat zi,GLfloat offset,Maze* maze){
     
-    GLuint w = maze->length;//tex->width;
-    GLuint h = maze->width;//tex->height;      VIktigt att w och h är samma som terrain
+    GLuint w = length; // maze->length;
+    GLuint h = width; // maze->width;
+    GLfloat x_pos = -xi;
+    GLfloat z_pos = -zi + offset;
     
     if( x_pos > w || x_pos < 0 || z_pos > h || z_pos < 0 ){
-        return 3.0;
+        return 10.0;
     }
 
     int x = floor(x_pos);
@@ -138,7 +142,7 @@ GLfloat Game::height_controll(){
     
 }
 
-void Game::ball_dir(){
+void Game::world_dir(){
     
     if (jump) {
         if (!turn) {
@@ -161,110 +165,137 @@ void Game::ball_dir(){
     }
     
     if(glutKeyIsDown(GLUT_KEY_LEFT)) {
-        if (strafe > -2) {
+        if (strafe > -strafe_max) {
             strafe -= 0.1;
         }
         else
-        strafe = -2;
+        strafe = -strafe_max;
     }
     else if(glutKeyIsDown(GLUT_KEY_RIGHT)) {
-        if (strafe < 2) {
+        if (strafe < strafe_max) {
             strafe += 0.1;
         }
         else
-        strafe = 2;
+        strafe = strafe_max;
     }
     else{
-        if (strafe > 0) {
-            strafe -= 0.1;
-        }
-        else if(strafe<0)
-        strafe += 0.1;
-        else
-            strafe =0;
+        strafe_back(0.1);
     }
+    player_->strafe = strafe;
     if(glutKeyIsDown(GLUT_KEY_UP)) {
-        if (ball_speed < 0.72) {
-            ball_speed += 0.01;
+        if (ball_speed_global < 0.72) {
+            ball_speed_global +=0.01;
+            ball_speed = ball_speed_global;
         }
     }
     else if(glutKeyIsDown(GLUT_KEY_DOWN)) {
-        if (ball_speed > 0.02) {
-            ball_speed -= 0.01;
+        if (ball_speed_global > 0.00) {
+            ball_speed_global -= 0.01;
+            ball_speed = ball_speed_global;
         }
+    }
+    else if(glutKeyIsDown('p')) {
+            ball_speed_global = 0.0;
+            ball_speed = 0;
     }
     
 }
 
 void Game::check_turn_key(){
     
-    if (glutKeyIsDown('c')) {
-        turn = true;
-        pol_dir = 1.0;
-        turn_angle = 1.0;
-        global_dir = ((global_dir+1)%4+4)%4;
-        return;
-    }
-    if (glutKeyIsDown('z')) {
+    GLfloat to_centrum = length_ + x_pos - (width_-2)/2;
+
+    
+    if (glutKeyIsDown('c') && wait_key < 1) {
         turn = true;
         pol_dir = -1.0;
-        turn_angle = 1.0;
-        global_dir = ((global_dir-1)%4+4)%4;
-        return;
     }
+    if (glutKeyIsDown('z') && wait_key < 1) {
+        turn = true;
+        pol_dir = 1.0;
+        }
+    
+    if (turn) {
+        if (to_centrum < width_/2) {
+            if (to_centrum > 0){
+            std::cout << "Wait to turn = " << to_centrum  << std::endl;
+               // wait_turn_pos = true;
+                strafe_back(strafe_max/(turn_steps-1)); //<-- hur många delar rotare
+            }
+            else if(to_centrum > -2.0){
+                std::cout << "Turn Direct!! = " << to_centrum  << std::endl;
+                // strafe -> 0 each turn
+            }
+            else{
+                //dead by too late;
+            }
+        }
+        turn_angle = M_PI_2/turn_steps;
+        ball_speed = 0;
+        global_dir = ((global_dir-1)%4+4)%4;
+        world_angle += -turn_angle*pol_dir;
+        maze->update_turn(turn_angle*pol_dir,x_pos,z_pos);
+        wait_key = turn_steps-1;
+        return;
+
+    }
+    
     
 }
 
 void Game::jump_controll(){
     
-    if (jump_count > 30) {
-        y_pos -= 0.1*jump_count/15;
-    }
-    else{
-        y_pos += 0.1*cos(jump_count*M_PI_2/60);
-    }
-    GLfloat control = height_controll();
-    jump_count++;
-    if (y_pos < control) {
-        jump = false;
-        y_pos = control;
-    }
+//    if (jump_count > 30) {
+//        y_pos -= 0.1*jump_count/15;
+//    }
+//    else{
+//        y_pos += 0.1*cos(jump_count*M_PI_2/60);
+//    }
+//    GLfloat control = height_controll();
+//    jump_count++;
+//    if (y_pos < control) {
+//        jump = false;
+//        y_pos = control;
+//    }
     
 }
 
 void Game::turn_controll(){
     
-    if (turn_wait > 0) {
-        turn_wait--;
-        return;
-    }
-    
-    GLfloat div= 12;
-    
-    if (turn_angle <= div){
-        ball_angle += M_PI_2 / div  * pol_dir;
-        turn_angle += 1.0;
-        ball_speed = ball_speed_global/2;
+    if (wait_key < 1){
+        turn = false;
+        ball_speed = ball_speed_global;
     }
     else{
-        turn = false;
-        turn_wait = 15;
-        ball_speed = ball_speed_global;
-        ball_angle = global_dir * M_PI_2;
+        wait_key--;
+        world_angle += -turn_angle*pol_dir;
+        maze->update_turn(turn_angle*pol_dir,x_pos,z_pos);
+        std::cout << " ||  Angle = " << world_angle << std::endl;
     }
     
 }
 
+void Game::strafe_back(GLfloat pace){
+    if (strafe > pace) {
+        strafe -= pace;
+    }
+    else if(strafe<-pace){
+        strafe += pace;
+    }
+    else{
+        strafe =0;
+    }
+}
+
 void turn_update(std::string turn_dir){
     
-    // Global dir (klar)
-    // Byta hieghtcontroll <- auto när man byter current
-    // Ta bort trädet som inte svänges till
-    // Current = turn_maze
-    // skapa nya träd
+
     
     
 }
+
+
+
 
 
 

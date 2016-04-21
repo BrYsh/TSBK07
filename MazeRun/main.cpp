@@ -22,7 +22,7 @@
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #endif
-Game* game_ = new Game();
+
 void init(void);
 void timer(int i);
 void GenerateTerrain(Maze*);
@@ -39,7 +39,8 @@ Model* sphere;
 GLfloat t = 0;
 
 
-int width_ = 50, height_ = 9;
+int width_ = 50, height_ = 17;
+Game* game_ = new Game(width_,height_);
 
 
 GLfloat tx = 0;
@@ -50,7 +51,7 @@ GLfloat ly = 0;
 GLfloat lz = 0;
 GLfloat yaw = 0.0;
 GLfloat pitch = 0.0;
-GLfloat speed = 0.2;
+GLfloat speed = 0.0;
 GLfloat strafex = 0.0;
 GLfloat strafez = 0.0;
 
@@ -72,7 +73,7 @@ void display(void)
 {
 
     t += 0.005;
-    game_->ball_dir();
+    game_->world_dir();
     //KeyEvent();
     // clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -111,21 +112,18 @@ void display(void)
     mat4 trans =T(0, 0, 0);
     
     
-    total = game_->maze->total;
-    
-    
-    
+    total = game_->maze->get_total();
     
     //Current
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(game_->maze->track, program, "inPosition", "inNormal", "inTexCoord");
     
-    total = game_->maze->left->total;
+    total = game_->maze->left->get_total();
     
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(game_->maze->left->track, program, "inPosition", "inNormal", "inTexCoord");
     
-    total = game_->maze->right->total;
+    total = game_->maze->right->get_total();
     
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(game_->maze->right->track, program, "inPosition", "inNormal", "inTexCoord");
@@ -154,15 +152,10 @@ void display(void)
     //trans = T(0,0,0); // <<< --  Vart spheren är
     //rot = Rx(0);
     //rot = Ry(M_PI_2/4);
-    total = game_->total;//Mult(game_->strans, rot);
+    total = game_->player_->total_pos();//Mult(game_->strans, rot);
 
-    
     camera = game_->update_camera();
-    //total = Mult(total,T(0,y_coord +2,0));
 
-    //    glBindTexture(GL_TEXTURE_2D, conctex);
-    //    glActiveTexture(GL_TEXTURE0);
-    //    glUniform1i(glGetUniformLocation(program, "tex"), 0);
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(sphere,program,"inPosition","inNormal","inTexCoord");
     
@@ -193,9 +186,7 @@ int main(int argc, char **argv)
     glutDisplayFunc(display);
     init ();
     glutTimerFunc(20, &timer, 0);
-    
     printf("bpp %f\n", 1.0);
-    
     glutMainLoop();
     
     
@@ -215,9 +206,11 @@ void timer(int i)
 void GenerateTerrain(Maze* maze)
 {
     GLfloat b;
+    GLfloat skirt = 0;
     int x, z;
     int width_g = width_, height_g = height_;
-    
+    maze->length = width_g;
+    maze->width = height_g;
     
     int vertexCount = width_g * height_g;
     int triangleCount = (width_g-1) * (height_g-1) * 2;
@@ -233,14 +226,23 @@ void GenerateTerrain(Maze* maze)
     for (x = 0; x < width_g; x++)
         for (z = 0; z < height_g; z++)
         {
+            if (z < 2 || z > height_g -3) {
+                if (z == 0 || z == height_g -1) {
+                    skirt = 3;
+                }
+                else
+                    skirt = 1;
+            }
+            else
+                skirt = 0;
             // Vertex array. You need to scale this properly
             vertexArray[(x + z * width_g)*3 + 0] = x / 1.0;
             if (x < width_g - height_g) {
-                vertexArray[(x + z * width_g)*3 + 1] = 1.0*b; //+ x*0.1;
-                last_b = vertexArray[(x + z * width_g)*3 + 1];
+                vertexArray[(x + z * width_g)*3 + 1] = 1.0*b - skirt; //+ x*0.1;
+                last_b = vertexArray[(x + z * width_g)*3 + 1] + skirt;
             }
             else{
-                vertexArray[(x + z * width_g)*3 + 1] = last_b;
+                vertexArray[(x + z * width_g)*3 + 1] = last_b - skirt;
             }
             vertexArray[(x + z * width_g)*3 + 2] = z / 1.0;
             

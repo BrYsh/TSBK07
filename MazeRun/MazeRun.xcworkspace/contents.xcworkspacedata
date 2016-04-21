@@ -57,6 +57,16 @@
    </Group>
    <Group
       location = "container:"
+      name = "Player">
+      <FileRef
+         location = "group:Player/player.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:Player/player.hpp">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"
       name = "Game">
       <FileRef
          location = "group:Game/game.hpp">

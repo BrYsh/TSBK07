@@ -4,7 +4,7 @@ CC2 += -std=c99 -Wall -w
 
 LDFLAGS += -DGL_GLEXT_PROTOTYPES -lm -framework OpenGL -framework Cocoa -I/opt/X11/include
 
-OBJECTS = main.o ./Game/game.o maze.o ./MG/MicroGlut.o ./MG/GL_utilities.o ./MG/VectorUtils3.o ./MG/loadobj.o ./MG/LoadTGA.o
+OBJECTS = main.o ./Game/game.o ./Maze/maze.o ./Player/player.o  ./MG/MicroGlut.o ./MG/GL_utilities.o ./MG/VectorUtils3.o ./MG/loadobj.o ./MG/LoadTGA.o
 
 #Huvudmal
 mazerun: $(OBJECTS) Makefile
@@ -19,6 +19,9 @@ game.o: ./Game/game.cpp ./Game/game.hpp
 
 maze.o: ./Maze/maze.cpp ./Maze/maze.hpp
 	g++ $(CC1) -c ./Maze/maze.cpp
+
+player.o: ./Player/player.cpp ./Player/player.hpp
+	g++ $(CC1) -c ./Player/player.cpp
 
 MicroGlut.o: ./MG/MicroGlut.m ./MG/Microglut.h
 	gcc $(CC2) -c ./MG/MicroGlut.m
