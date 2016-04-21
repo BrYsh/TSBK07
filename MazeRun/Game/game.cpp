@@ -109,8 +109,8 @@ void Game::update(){
 
 mat4 Game::update_camera(){
     
-    return lookAt(-10,5,strafe,
-                  0.0,1.0,strafe,
+    return lookAt(-15,8.5,strafe,
+                  0.0,8,strafe,
                   0.0,1.0,0.0);
 }
 

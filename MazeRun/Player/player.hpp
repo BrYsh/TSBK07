@@ -27,7 +27,7 @@ public:
     
     Player();
     void update(bool, bool);
-    mat4 total_pos();
+    void total_pos();
     
     mat4 rot;
     mat4 trans;
@@ -57,6 +57,7 @@ public:
     
     mat4 scale_arm_body;
     mat4 scale_head;
+    mat4 scale_legs;
 
     GLfloat strafe;
 
