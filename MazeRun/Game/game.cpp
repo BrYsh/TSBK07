@@ -30,6 +30,9 @@ Game::Game(int w, int h){
     ball_speed_global = 0.00;
     ball_speed = ball_speed_global;
     
+    duck = false;
+    duck_count = 0;
+    
     x_pos = 0.0;
     y_pos = 0.0;
     y_pos_n = y_pos;
@@ -70,7 +73,7 @@ Game::Game(int w, int h){
 void Game::update(){
     
     
-    player_->update();
+    player_->update(jump,duck);
     
     //std::cout << "to middle turn = " << length_ + x_pos - (width_-2)/2 << std::endl;
     
@@ -106,7 +109,7 @@ void Game::update(){
 
 mat4 Game::update_camera(){
     
-    return lookAt(-25,10,strafe,
+    return lookAt(-10,5,strafe,
                   0.0,1.0,strafe,
                   0.0,1.0,0.0);
 }
@@ -144,7 +147,7 @@ GLfloat height_controll(GLint length, GLint width, GLfloat xi, GLfloat zi,GLfloa
 
 void Game::world_dir(){
     
-    if (jump) {
+    if (jump || duck) {
         if (!turn) {
             check_turn_key();
         }
@@ -157,6 +160,10 @@ void Game::world_dir(){
     if (glutKeyIsDown(' ')) {
         jump = true;
         jump_count = 0;
+    }
+    if (glutKeyIsDown('x')) {
+        duck = true;
+        duck_count = 0;
     }
     
     check_turn_key();

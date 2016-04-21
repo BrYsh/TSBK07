@@ -57,6 +57,9 @@ public:
     int global_dir;
     int turn_steps;
     
+    bool duck;
+    int duck_count;
+    
     GLfloat world_angle;
     GLfloat ball_speed;
     GLfloat ball_speed_global;

@@ -33,6 +33,12 @@ void InitTerrain();
 
 mat4 projectionMatrix, camera;
 Model* sphere;
+Model* LegR;
+Model* LegL;
+Model* Body;
+Model* ArmR;
+Model* ArmL;
+
 
 
 
@@ -64,7 +70,7 @@ Model *m, *m2;
 
 // Reference to shader program
 GLuint program;
-GLuint tex1, tex2;
+GLuint tex1, tex2, tex_body, tex_head;
 TextureData ttex; // terrain
 
 
@@ -155,9 +161,48 @@ void display(void)
     total = game_->player_->total_pos();//Mult(game_->strans, rot);
 
     camera = game_->update_camera();
-
+    
+    //Body
+    total = game_->player_->body_total;
+    
+    glBindTexture(GL_TEXTURE_2D, tex_body);
+    glActiveTexture(GL_TEXTURE0);
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
-    DrawModel(sphere,program,"inPosition","inNormal","inTexCoord");
+    DrawModel(Body,program,"inPosition","inNormal","inTexCoord");
+    
+    //Rest of player init tex
+    glBindTexture(GL_TEXTURE_2D, tex_head);
+    glActiveTexture(GL_TEXTURE0);
+    
+    total = game_->player_->head_total;
+    
+    //head
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(Body,program,"inPosition","inNormal","inTexCoord");
+    
+    //arms
+    total = game_->player_->arm_total_l;
+    //lsft
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(ArmL,program,"inPosition","inNormal","inTexCoord");
+    
+    total = game_->player_->arm_total_r;
+    //right
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(ArmR,program,"inPosition","inNormal","inTexCoord");
+    
+    //legs
+    total = game_->player_->leg_total_l;
+    //Left
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(LegL,program,"inPosition","inNormal","inTexCoord");
+    
+    total = game_->player_->leg_total_r;
+    //Right
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(LegR,program,"inPosition","inNormal","inTexCoord");
+    
+    
     
     
     printError("display 2");
@@ -334,11 +379,22 @@ void init(void)
     LoadTGATextureSimple("./TGA/maskros512.tga", &tex1);
     LoadTGATextureSimple("./TGA/conc.tga", &tex2);
     
+
+    
     // Load terrain data
     InitTerrain();
     
     LoadTGATextureData("./TGA/fft-terrain.tga", &ttex);
     printError("init terrain");
+    
+    LoadTGATextureSimple("./TGA/tex_01_lfy_weapon1out.tga", &tex_head);
+    LoadTGATextureSimple("./TGA/red.tga", &tex_body);
+    
+    LegR = LoadModelPlus("./OBJ/LegR.obj");//Load Right Leg
+    LegL = LoadModelPlus("./OBJ/LegL.obj");//Load Left Leg
+    Body = LoadModelPlus("./OBJ/groundsphere.obj"); //Load Body & head
+    ArmR = LoadModelPlus("./OBJ/armr.obj");//Load Right Arm
+    ArmL = LoadModelPlus("./OBJ/arml.obj");//Load Right Arm
     
 
     
