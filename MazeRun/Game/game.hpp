@@ -31,6 +31,7 @@ public:
     //GLfloat height_controll();
     void jump_controll();
     void turn_controll();
+    void duck_controll();
     void check_turn_key();
 
     void world_dir();
@@ -52,6 +53,8 @@ public:
     
     bool jump;
     bool turn;
+    bool wait_turn_pos;
+    bool late_turn_2_death;
     int turn_wait = 0;
     int jump_count;
     int global_dir;

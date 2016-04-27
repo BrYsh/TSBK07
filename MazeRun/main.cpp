@@ -158,7 +158,7 @@ void display(void)
     //trans = T(0,0,0); // <<< --  Vart spheren är
     //rot = Rx(0);
     //rot = Ry(M_PI_2/4);
-    total = game_->player_->total_pos();//Mult(game_->strans, rot);
+    //total = game_->player_->total_pos();//Mult(game_->strans, rot);
 
     camera = game_->update_camera();
     

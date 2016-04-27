@@ -46,7 +46,7 @@ Player::Player(){
     arm_total_r = Mult(arm_trans,arm_angle);
     
     body_total = Mult(T(x_pos,y_pos+3.0,z_pos),scale_arm_body);
-    head_total = Mult(T(x_pos,y_pos+4.5,z_pos),scale_head);
+    head_total = Mult(T(x_pos,y_pos+2.5,z_pos),scale_head);
     
     //Duck
     duck_count = 0;
@@ -69,7 +69,7 @@ void Player::update(bool jump_in , bool duck_in){
         head_total = Mult(T(x_pos-0.9, y_pos+3.0, z_pos),scale_head);
     }
     else{
-        head_total = Mult(T(x_pos,y_pos+4.5,z_pos),scale_head);
+        head_total = Mult(T(x_pos,y_pos+2.5,z_pos),scale_head);
     }
     
     if (duck) {
@@ -91,7 +91,7 @@ void Player::update(bool jump_in , bool duck_in){
 
 void Player::total_pos(){
     head_total = Mult(T(0, 0, strafe), head_total);
-    body_total = Mult(T(x_pos,y_pos+3.0,z_pos),scale_arm_body);
+    body_total = Mult(T(x_pos,y_pos+1.0,z_pos),scale_arm_body);
     body_total = Mult(T(0, 0, strafe), body_total);
     arm_total_l = Mult(T(0, 0, strafe), arm_total_l);
     arm_total_r = Mult(T(0, 0, strafe), arm_total_r);
@@ -109,13 +109,13 @@ void Player::leg_run_l(){
             leg_state_l++;
             leg_angle = Rx(M_PI/7);
             leg_angle = Mult(leg_angle,Ry(M_PI));
-            leg_trans = T(0, 2, -0.36);
+            leg_trans = T(0, 0, -0.36);
         }
         else{
             leg_state_l++;
             leg_angle = Rx(-M_PI/7);
             leg_angle = Mult(leg_angle,Ry(M_PI));
-            leg_trans = T(0, 2, 0.36);
+            leg_trans = T(0, 0, 0.36);
             if (leg_state_l == 20) {
                 leg_state_l = 0;
             }
@@ -132,9 +132,6 @@ void Player::leg_run_l(){
             leg_angle = Mult(leg_angle,Rx(M_PI/2));
             leg_trans = T(0, 3, 0.5);
         }
-        
-        
-        
     }
     leg_total_l = Mult(Mult(Ry(M_PI_2),Mult(leg_trans, leg_angle)),scale_legs);
     return;
@@ -146,13 +143,13 @@ void Player::leg_run_r(){
             leg_state_r++;
             leg_angle = Rx(M_PI/7);
             leg_angle = Mult(leg_angle,Ry(M_PI));
-            leg_trans = T(0, 2, -0.36);
+            leg_trans = T(0, 0, -0.36);
         }
         else{
             leg_state_r++;
             leg_angle = Rx(-M_PI/7);
             leg_angle = Mult(leg_angle,Ry(M_PI));
-            leg_trans = T(0, 2, 0.36);
+            leg_trans = T(0, 0, 0.36);
             if (leg_state_r == 20) {
                 leg_state_r = 0;
             }
@@ -180,13 +177,13 @@ void Player::arm_run_l(){
         if (arm_state_l < 10){
             arm_state_l++;
             arm_angle_l = Rz(0);
-            arm_trans_l = T(x_pos+0.9, y_pos+4.0, z_pos);
+            arm_trans_l = T(x_pos+0.9, y_pos+2.0, z_pos);
         }
         
         else{
             arm_state_l++;
             arm_angle_l = Rz(-M_PI/4);
-            arm_trans_l = T(x_pos+0.9, y_pos+3.8, z_pos);
+            arm_trans_l = T(x_pos+0.9, y_pos+1.8, z_pos);
             
             
             if (arm_state_l == 20) {
@@ -196,7 +193,7 @@ void Player::arm_run_l(){
     }
     else{
         arm_angle_l = Rx(0);
-        arm_trans_l = T(x_pos+0.9, y_pos+4.0, z_pos);
+        arm_trans_l = T(x_pos+0.9, y_pos+2.0, z_pos);
     }
     arm_total_l = Mult(Mult(Ry(-M_PI_2),Mult(arm_trans_l, arm_angle_l)),scale_arm_body);
     return ;
@@ -207,12 +204,12 @@ void Player::arm_run_r(){
         if (arm_state_r < 10){
             arm_state_r++;
             arm_angle = Rz(0);
-            arm_trans = T(x_pos-0.9, y_pos+4.0, z_pos);
+            arm_trans = T(x_pos-0.9, y_pos+2.0, z_pos);
         }
         else{
             arm_state_r++;
             arm_angle = Rz(M_PI_2/2);
-            arm_trans = T(x_pos-0.9, y_pos+3.8, z_pos);
+            arm_trans = T(x_pos-0.9, y_pos+1.8, z_pos);
             
             if (arm_state_r == 20) {
                 arm_state_r = 0;
@@ -221,7 +218,7 @@ void Player::arm_run_r(){
     }
     else{
         arm_angle = Rx(0);
-        arm_trans = T(x_pos-0.9, y_pos+4.0, z_pos);
+        arm_trans = T(x_pos-0.9, y_pos+2.0, z_pos);
     }
     arm_total_r = Mult(Mult(Ry(-M_PI_2),Mult(arm_trans, arm_angle)),scale_arm_body);
     return ;
