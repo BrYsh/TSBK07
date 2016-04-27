@@ -31,6 +31,7 @@ public:
     //GLfloat height_controll();
     void jump_controll();
     void turn_controll();
+    void duck_controll();
     void check_turn_key();
 
     void world_dir();

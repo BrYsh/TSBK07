@@ -81,8 +81,13 @@ void Game::update(){
     
 
     
-    if (jump) {
+    if (jump || duck) {
+        if (jump){
         jump_controll();
+        }
+        if (duck){
+        duck_controll();
+        }
         check_turn_key();
     }
     else{
@@ -269,18 +274,31 @@ void Game::check_turn_key(){
 
 void Game::jump_controll(){
     
-//    if (jump_count > 30) {
-//        y_pos -= 0.1*jump_count/15;
-//    }
-//    else{
-//        y_pos += 0.1*cos(jump_count*M_PI_2/60);
-//    }
-//    GLfloat control = height_controll();
-//    jump_count++;
-//    if (y_pos < control) {
-//        jump = false;
-//        y_pos = control;
-//    }
+    if (jump_count > 30) {
+        y_pos_n -= 0.1*jump_count/15;
+    }
+    else{
+        y_pos_n += 0.1*cos(jump_count*M_PI_2/60);
+    }
+    GLfloat control = height_controll(maze->length,maze->width,x_pos,z_pos,offset,maze);
+    jump_count++;
+    if (y_pos_n < control) {
+        jump = false;
+        y_pos_n = control;
+    }
+    
+}
+
+void Game::duck_controll(){
+    
+    
+    if (duck_count < 50) {
+        duck_count++;
+    }
+    else{
+        duck_count = 0;
+        duck = false;
+    }
     
 }
 
