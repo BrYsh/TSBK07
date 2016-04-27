@@ -66,25 +66,21 @@ void Player::update(bool jump_in , bool duck_in){
     arm_run_r();
     
     if (duck) {
-        head_total = Mult(T(x_pos-0.9, y_pos+3.0, z_pos),scale_head);
+        head_total = Mult(T(x_pos-0.9, y_pos+1.5, z_pos),scale_head);
     }
     else{
         head_total = Mult(T(x_pos,y_pos+2.5,z_pos),scale_head);
     }
     
     if (duck) {
-        y_pos = -2.5;
+        y_pos = -0.5;
     }
         else{
             y_pos = 0;
         }
-       
+ 
     
-    
-  
-    
-    
-    
+
     
      total_pos();
 }
@@ -125,7 +121,7 @@ void Player::leg_run_l(){
         if (jump) {
             leg_angle = Ry(0);
             leg_angle = Mult(leg_angle,Ry(M_PI));
-            leg_trans = T(0, 2, -0.36);
+            leg_trans = T(0, 0, 0);
         }
         else { //duck
             leg_angle = Rz(M_PI);
@@ -159,7 +155,7 @@ void Player::leg_run_r(){
         if (jump) {
             leg_angle = Ry(0);
             leg_angle = Mult(leg_angle,Ry(M_PI));
-            leg_trans = T(0, 2, -0.36);
+            leg_trans = T(0, 0, 0);
             }
         else { //duck
             leg_angle = Rz(M_PI);
