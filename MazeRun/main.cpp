@@ -16,6 +16,7 @@
 #include "./MG/VectorUtils3.h"
 #include "./MG/loadobj.h"
 #include "./MG/LoadTGA.h"
+//#include "./MG/simplefont.h"
 #include <iostream>
 #include <string>
 
@@ -38,6 +39,7 @@ Model* LegL;
 Model* Body;
 Model* ArmR;
 Model* ArmL;
+Model* skybox;
 
 
 
@@ -61,29 +63,41 @@ GLfloat speed = 0.0;
 GLfloat strafex = 0.0;
 GLfloat strafez = 0.0;
 
+GLfloat time_count = 0.0;
+GLuint time_count_out;
+char time_count_out_str;
+char buffer [50];
+
 // vertex array object
 Model *m, *m2;
 
 
 
-
-
 // Reference to shader program
-GLuint program;
-GLuint tex1, tex2, tex_body, tex_head;
+GLuint program, skyprogram;
+GLuint tex1, tex2, tex_body, tex_head, skytex;
 TextureData ttex; // terrain
 
 
 
 void display(void)
 {
+    time_count += 0.02;
+    
+    
 
+    
     t += 0.005;
     game_->world_dir();
     //KeyEvent();
     // clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+    snprintf(buffer, 50, "%f", time_count);
+    
+   // time_count_out_str = std::to_string(time_count_out);
+    //sfDrawString(30, 30, "Elapsed Time:");
+    //sfDrawString(170, 30, buffer);
     
     mat4 total, modelView, camMatrix;
     
@@ -155,7 +169,38 @@ void display(void)
     
     
     
+    // skybox
     
+    // Disable Z-buffer to draw sky
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    
+    // Use skytex as texture and switch to skyprogram
+    glUseProgram(skyprogram);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, skytex);
+    
+    //Remove translation from skylookAt
+    mat4 skylookAT = camera;
+    skylookAT.m[3] = 0;
+    skylookAT.m[7] = 0;
+    skylookAT.m[11] = 0;
+    
+    //mat4 modelv = Mult(S(-0.8,1,1), modelView);
+    
+    // Send skylookAT to skyprogram
+    //glUniformMatrix4fv(glGetUniformLocation(skyprogram, "lookAT"), 1, GL_TRUE, skylookAT.m);
+    
+    // Sky
+    glUniformMatrix4fv(glGetUniformLocation(skyprogram, "mdlMatrix"),1, GL_TRUE, modelView.m);
+    DrawModel(skybox, skyprogram, "in_Position", NULL, "in_TexCoord");
+    printError("sky shader");
+    
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    
+    
+    glUseProgram(program);
     
     
     
@@ -222,7 +267,7 @@ void display(void)
     
     
     
-    
+   
     printError("display 2");
     
     glutSwapBuffers();
@@ -235,6 +280,7 @@ void display(void)
 //{
 //	printf("%d %d\n", x, y);
 //}
+
 
 
 int main(int argc, char **argv)
@@ -389,6 +435,7 @@ void init(void)
     
     // Load and compile shader
     program = loadShaders("./Shader/terrain.vert", "./Shader/terrain.frag");
+    skyprogram = loadShaders("./Shader/sky.vert", "./Shader/sky.frag");
     glUseProgram(program);
     printError("init shader");
     
@@ -414,8 +461,16 @@ void init(void)
     ArmR = LoadModelPlus("./OBJ/armr.obj");//Load Right Arm
     ArmL = LoadModelPlus("./OBJ/arml.obj");//Load Right Arm
     
-
+    //skybox = LoadModelPlus("./OBJ/cubeplus.obj");//Load skybox
     
+    // Load skybox data
+    glUseProgram(skyprogram);
+    
+    glUniformMatrix4fv(glGetUniformLocation(skyprogram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
+    //LoadTGATextureSimple("./TGA/skybox2.tga", &skytex); 	// Texture unit 1
+    
+    glUseProgram(program);
+    //sfMakeRasterFont();
     
 }
 

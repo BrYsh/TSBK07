@@ -71,6 +71,8 @@ public:
     GLfloat y_pos;
     GLfloat z_pos;
     
+    GLfloat duck_count;
+    
 
 
     
