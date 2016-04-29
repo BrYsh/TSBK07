@@ -25,7 +25,9 @@ Game::Game(int w, int h){
     jump = false;
     turn = false;
     late_turn_2_death = false;
+    early_turn_2_death = false;
     wait_turn_pos = false;
+    good_turn = false;
     turn_steps = 8;
     jump_count = 0;
     world_angle = 0;
@@ -58,15 +60,6 @@ Game::Game(int w, int h){
     world_trans = T(x_pos, y_pos, z_pos);
     
     maze = new Maze(0,0);
-    current_track = maze->track;
-    
-    left_t = maze->left->track;
-    leftleft_t = maze->left->left->track;
-    leftright_t = maze->left->right->track;
-    
-    right_t = maze->right->track;
-    rightright_t = maze->right->right->track;
-    rightleft_t = maze->right->left->track;
     
     player_ = new Player();
     
@@ -77,44 +70,68 @@ void Game::update(){
     
     player_->update(jump,duck);
     
-    //std::cout << "to middle turn = " << length_ + x_pos - (width_-2)/2 << std::endl;
+    std::cout << "x_pos = " <<  x_pos  << "z_pos = " << z_pos << std::endl;
     
 
     
     if (jump || duck) {
         if (jump){
-        jump_controll();
+            jump_controll();
         }
         if (duck){
-        duck_controll();
+            duck_controll();
         }
-        check_turn_key();
+        if (!turn) {
+            check_turn_key();
+        }
+        
     }
     else{
         y_pos_n = height_controll(maze->length,maze->width,x_pos,z_pos,offset,maze);
     }
     if (!late_turn_2_death) {
-    if (turn) {
-        if (wait_turn_pos) {
-            GLfloat to_centrum = length_ + x_pos - (width_-2)/2;
-            if (to_centrum <= 0) {
-                turn_angle = M_PI_2/turn_steps;
-                ball_speed = 0;
-                global_dir = ((global_dir-1)%4+4)%4;
-                world_angle += -turn_angle*pol_dir;
-                maze->update_turn(turn_angle*pol_dir,x_pos,z_pos);
-                wait_key = turn_steps-1;
-                wait_turn_pos = false;
+        if (turn) {
+            if (wait_turn_pos) {
+                GLfloat to_centrum = length_ + x_pos - (width_-2)/2;
+                if (to_centrum <= 0) {
+                    turn_angle = M_PI_2/turn_steps;
+                    ball_speed = 0;
+                    global_dir = ((global_dir-1)%4+4)%4;
+                    world_angle += -turn_angle*pol_dir;
+                    maze->update_turn(turn_angle*pol_dir,x_pos,z_pos);
+                    wait_key = turn_steps-1;
+                    wait_turn_pos = false;
+                }
             }
+            else
+                turn_controll();
         }
-        else
-        turn_controll();
-    }
     }
     
     world_dir();
     x_pos += -ball_speed*cos(world_angle);
     z_pos += -ball_speed*sin(world_angle);
+
+    
+    
+    if (good_turn && !turn && !wait_turn_pos){ // Efter en good tur
+        GLfloat pos = (width_ - 5)/2;
+        std::cout << "abs(z) - pos = " << pos << std::endl;
+        if (fabs(z_pos) - pos > 5){ //Pa nasta texture
+            
+            //maze_->update_terain(z_pos) // Inklusive rotationer
+            //nollstall coordinater
+            //generate_terrain = true;
+            //dir = 
+            
+            
+            
+            ball_speed = 0;
+            good_turn = false;
+        }
+        
+        
+    }
     
     
     
@@ -146,7 +163,7 @@ GLfloat height_controll(GLint length, GLint width, GLfloat xi, GLfloat zi,GLfloa
     GLfloat z_pos = -zi + offset;
     
     if( x_pos > w || x_pos < 0 || z_pos > h || z_pos < 0 ){
-        return 10.0;
+        return 0.0;
     }
 
     int x = floor(x_pos);
@@ -169,6 +186,10 @@ GLfloat height_controll(GLint length, GLint width, GLfloat xi, GLfloat zi,GLfloa
 
 void Game::world_dir(){
     
+    if (early_turn_2_death) {
+        return;
+    }
+    
     if (jump || duck) {
         if (!turn) {
             check_turn_key();
@@ -186,6 +207,10 @@ void Game::world_dir(){
     if (glutKeyIsDown('x')) {
         duck = true;
         duck_count = 0;
+    }
+    
+    if (good_turn) {
+        return;
     }
     
     check_turn_key();
@@ -232,6 +257,10 @@ void Game::world_dir(){
 
 void Game::check_turn_key(){
     
+    if (early_turn_2_death || good_turn) {
+        return;
+    }
+    
     GLfloat to_centrum = length_ + x_pos - (width_-2)/2;
 
     
@@ -250,11 +279,15 @@ void Game::check_turn_key(){
             std::cout << "Wait to turn = " << to_centrum  << std::endl;
                wait_turn_pos = true;
                 strafe_back(strafe_max/(turn_steps-1)); //<-- hur många delar rotare
+                good_turn = true;
             }
             else if(to_centrum < 0){
                 late_turn_2_death = true;
                 return;
             }
+        }
+        else{
+            early_turn_2_death = true;
         }
         if (!wait_turn_pos) {
             turn_angle = M_PI_2/turn_steps;

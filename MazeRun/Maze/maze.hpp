@@ -40,7 +40,7 @@ public:
     GLfloat xpos_n;
     GLfloat zpos_n;
     
-    void generate_transform();
+    void generate_transform(GLfloat, GLfloat);
     void update_pos(mat4);
     mat4 get_total();
     void update_turn(GLfloat,GLfloat,GLfloat);

@@ -118,21 +118,39 @@ void display(void)
     mat4 trans =T(0, 0, 0);
     
     
-    total = game_->maze->get_total();
-    
     //Current
+    total = game_->maze->get_total();
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(game_->maze->track, program, "inPosition", "inNormal", "inTexCoord");
     
+    //left
     total = game_->maze->left->get_total();
-    
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(game_->maze->left->track, program, "inPosition", "inNormal", "inTexCoord");
     
-    total = game_->maze->right->get_total();
+    //left->left
+    total = game_->maze->left->left->get_total();
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(game_->maze->left->left->track, program, "inPosition", "inNormal", "inTexCoord");
     
+    //left->right
+    total = game_->maze->left->right->get_total();
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(game_->maze->left->right->track, program, "inPosition", "inNormal", "inTexCoord");
+    
+    
+    //right
+    total = game_->maze->right->get_total();
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     DrawModel(game_->maze->right->track, program, "inPosition", "inNormal", "inTexCoord");
+    //right->left
+    total = game_->maze->right->left->get_total();
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(game_->maze->right->left->track, program, "inPosition", "inNormal", "inTexCoord");
+    //right->right
+    total = game_->maze->right->right->get_total();
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+    DrawModel(game_->maze->right->right->track, program, "inPosition", "inNormal", "inTexCoord");
     
     
     
@@ -412,7 +430,7 @@ void InitTerrain(){
     GenerateTerrain(game_->maze->right->right);
     GenerateTerrain(game_->maze->right->left);
  
-    game_->maze->generate_transform();
+    game_->maze->generate_transform(0.0,-height_/2.0);
     
     
 }

@@ -55,6 +55,8 @@ public:
     bool turn;
     bool wait_turn_pos;
     bool late_turn_2_death;
+    bool early_turn_2_death;
+    bool good_turn;
     int turn_wait = 0;
     int jump_count;
     int global_dir;
@@ -98,15 +100,7 @@ public:
     GLfloat camera_control_z;
     
     Maze* maze;
-    Model* current_track;
-    
-    Model* left_t;
-    Model* leftleft_t;
-    Model* leftright_t;
-    
-    Model* right_t;
-    Model* rightright_t;
-    Model* rightleft_t;
+
     
     Player* player_;
     
