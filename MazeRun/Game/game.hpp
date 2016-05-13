@@ -32,6 +32,7 @@ public:
     void jump_controll();
     void turn_controll();
     void duck_controll();
+    void duck_cam_controll();
     void check_turn_key();
 
     void world_dir();
@@ -57,13 +58,17 @@ public:
     bool late_turn_2_death;
     bool early_turn_2_death;
     bool good_turn;
+    bool imortality;
+    bool dead;
     int turn_wait = 0;
     int jump_count;
     int global_dir;
     int turn_steps;
+    int obstacle_x_pos;
     
     bool duck;
     int duck_count;
+    bool duck_camera;
     
     GLfloat world_angle;
     GLfloat ball_speed;
@@ -72,6 +77,7 @@ public:
     GLfloat x_pos;
     GLfloat y_pos;
     GLfloat y_pos_n;
+    GLfloat y_pos_t;
     GLfloat z_pos;
     
     GLfloat x_pos_tot;
@@ -99,10 +105,18 @@ public:
     GLfloat camera_control_y;
     GLfloat camera_control_z;
     
+    GLfloat next_start_pos;
+    
+    char last_turn;
+    bool generate_terrain_bool;
+    
     Maze* maze;
 
     
     Player* player_;
+    
+    void boost_collision();
+    mat4 head_pos;
     
 
     

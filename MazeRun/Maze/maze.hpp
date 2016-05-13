@@ -23,8 +23,6 @@ class Maze
     
 public:
 
-    //Path left_P;
-    //Path right_P;
     Maze(int dir,int t);
     Model* track;
     Maze* left;
@@ -44,10 +42,29 @@ public:
     void update_pos(mat4);
     mat4 get_total();
     void update_turn(GLfloat,GLfloat,GLfloat);
+    void update_terain(GLfloat,GLfloat);
+    void update_tree();
+    void new_path();
+    void get_all_pos();
+    void null_global_dir(char);
     
     mat4 global_trans;
     GLfloat global_angle;
     
+    // --- __ -- New
+    
+    void choose_booster();
+    void booster_pos();
+    void choose_obstacle();
+    void obstacle_pos();
+    
+    int boost;
+    int boost_x_pos;
+    int boost_z_pos;
+    
+    int obstacle;
+    int obstacle_x_pos;
+    bool b_collision;
     
 private:
     

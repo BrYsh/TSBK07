@@ -10,6 +10,8 @@
 // Fixed FUBAR in InitFBO().
 // 130228: Changed most printf's to stderr.
 // 131014: Added tesselation shader support
+// 150812: Added a NULL check on file names in readFile, makes Visual Studio happier.
+// 160302: Uses fopen_s on Windows, as suggested by Jesper Post. Should reduce warnings a bit.
 
 //#define GL3_PROTOTYPES
 #include <stdlib.h>
@@ -27,12 +29,23 @@ char* readFile(char *file)
 	long length;
 	char *buf;
 
-	fptr = fopen(file, "rb"); /* Open file for reading */
+	if (file == NULL)
+			return NULL;
+
+
+	// It seems Windows/VS doesn't like fopen any more, but fopen_s is not on the others.
+	#if defined(_WIN32)
+		fopen_s(&fptr, file, "r");
+	#else
+		fptr = fopen(file, "rb"); // rw works everywhere except Windows?
+	#endif
+//	fptr = fopen(file, "rb"); /* Open file for reading */
 	if (!fptr) /* Return NULL on failure */
 		return NULL;
 	fseek(fptr, 0, SEEK_END); /* Seek to the end of the file */
 	length = ftell(fptr); /* Find out how many bytes into the file we are */
 	buf = (char*)malloc(length+1); /* Allocate a buffer for the entire length of the file and a null terminator */
+    memset(buf, 0, sizeof(char)*(length + 1)); /* Clean the buffer */
 	fseek(fptr, 0, SEEK_SET); /* Go back to the beginning of the file */
 	fread(buf, length, 1, fptr); /* Read the contents of the file in to the buffer */
 	fclose(fptr); /* Close the file */
@@ -206,12 +219,18 @@ void printError(const char *functionName)
        if ((lastError != error) || (strcmp(functionName, lastErrorFunction)))
        {
 	       fprintf (stderr, "GL error 0x%X detected in %s\n", error, functionName);
+	#if defined(_WIN32)
+	       strcpy_s(lastErrorFunction, 1024, functionName);
+	#else
 	       strcpy(lastErrorFunction, functionName);
+	#endif
 	       lastError = error;
        }
    }
 }
 
+
+/*
 
 // Keymap mini manager
 // Important! Uses glutKeyboardFunc/glutKeyboardUpFunc so you can't use them
@@ -243,7 +262,7 @@ void initKeymapManager()
 	glutKeyboardFunc(keyDown);
 	glutKeyboardUpFunc(keyUp);
 }
-
+*/
 
 // FBO
 

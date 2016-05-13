@@ -16,7 +16,7 @@
 #include "./MG/VectorUtils3.h"
 #include "./MG/loadobj.h"
 #include "./MG/LoadTGA.h"
-//#include "./MG/simplefont.h"
+#include "./MG/simplefont.h"
 #include <iostream>
 #include <string>
 
@@ -24,13 +24,17 @@
 #include <OpenGL/gl3.h>
 #endif
 
+#include <time.h>       /* time */
+
+
 void init(void);
 void timer(int i);
 void GenerateTerrain(Maze*);
-//GLfloat height_controll(GLfloat xf, GLfloat zf,Model* M);
+void NewTerrain(GLfloat);
 void KeyEvent();
-//void ball_dir();
 void InitTerrain();
+void draw_boost(Maze* maze);
+void draw_obsticle(Maze* maze);
 
 mat4 projectionMatrix, camera;
 Model* sphere;
@@ -40,16 +44,16 @@ Model* Body;
 Model* ArmR;
 Model* ArmL;
 Model* skybox;
-
-
-
+Model* Lava;
+Model* Star;
+Model* SpeedObj;
+Model* Imortal;
+Model* Gate;
 
 GLfloat t = 0;
 
-
 int width_ = 50, height_ = 17;
-Game* game_ = new Game(width_,height_);
-
+Game* game_ = new Game(width_,height_-1);
 
 GLfloat tx = 0;
 GLfloat ty = 0;
@@ -64,40 +68,39 @@ GLfloat strafex = 0.0;
 GLfloat strafez = 0.0;
 
 GLfloat time_count = 0.0;
-GLuint time_count_out;
-char time_count_out_str;
+int time_boost = 0;
 char buffer [50];
-
-// vertex array object
-Model *m, *m2;
-
 
 
 // Reference to shader program
 GLuint program, skyprogram;
-GLuint tex1, tex2, tex_body, tex_head, skytex;
+GLuint tex1, tex2, tex_body, tex_head, skytex, lavatex,startex, speedtex, imortaltex, gatetex;
 TextureData ttex; // terrain
+mat4 skytot, lavatot;
 
 
 
 void display(void)
 {
-    time_count += 0.02;
+    //std::cout << "time boost = " << time_boost << std::endl;
+    if (time_boost >= 1) {
+        time_boost -= 1;
+        if (time_boost < 1) {
+            std::cout << "BOOST OFF!" << std::endl;
+            game_->ball_speed = game_->ball_speed_global;
+            game_->imortality = false;
+        }
+    }
     
     
+    //printf("d1 \n");
 
     
     t += 0.005;
     game_->world_dir();
-    //KeyEvent();
     // clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    snprintf(buffer, 50, "%f", time_count);
-    
-   // time_count_out_str = std::to_string(time_count_out);
-    //sfDrawString(30, 30, "Elapsed Time:");
-    //sfDrawString(170, 30, buffer);
     
     mat4 total, modelView, camMatrix;
     
@@ -106,30 +109,66 @@ void display(void)
     glUseProgram(program);
     // Build matrix
 
-    vec3 cam = {0, 5, 8};
-    vec3 lookAtPoint = {2, 0, 2};
+    vec3 cam = vec3(0, 5, 8);
+    vec3 lookAtPoint = vec3(2, 0, 2);
     camMatrix = lookAt(cam.x, cam.y, cam.z,
                        lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
                        0.0, 1.0, 0.0);
     modelView = IdentityMatrix();
-    
     total = Mult(camMatrix, modelView);
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
     glUniformMatrix4fv(glGetUniformLocation(program, "Camera"), 1, GL_TRUE, camera.m);
     
-    glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
+    // skybox
+    
+    // Disable Z-buffer to draw sky
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    
+    // Use skytex as texture and switch to skyprogram
+    glUseProgram(skyprogram);
     glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, skytex);
+    
+    
+    // Sky
+    mat4 skylookAT = camera;
+    skylookAT.m[3] = 0;
+    skylookAT.m[7] = 0;
+    skylookAT.m[11] = 0;
+    
+    skylookAT = Mult(T(-0.2,0,0), skylookAT);
+    mat4 skyrot = Ry(game_->turn_angle*game_->pol_dir);
+    skytot = Mult(skytot, skyrot);
+
+    glUniformMatrix4fv(glGetUniformLocation(skyprogram, "lookAT"), 1, GL_TRUE, skylookAT.m);
+    
+    glUniformMatrix4fv(glGetUniformLocation(skyprogram, "mdlMatrix"),1, GL_TRUE, skytot.m);
+    DrawModel(skybox, skyprogram, "in_Position", NULL, "in_TexCoord");
+    printError("sky shader");
+    
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glUseProgram(program);
 
     
+    glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
+    glActiveTexture(GL_TEXTURE0);
     
     
+    // game clock
+    if (!game_->dead) {
+        // game clock
+        time_count += 0.02;
+        snprintf(buffer, 50, "%f", time_count);
+        sfDrawString(30, 30, "Elapsed Time:");
+        sfDrawString(170, 30, buffer);
+        if (game_->ball_speed_global < 5) {
+            game_->ball_speed_global += 0.0002;
+        }
+        
+    }
     
-    
-    
-    //rotate ground
-    mat4 rot = Ry(0);
-    rot = Rx(0);
-    mat4 trans =T(0, 0, 0);
     
     
     //Current
@@ -168,47 +207,7 @@ void display(void)
     
     
     
-    
-    // skybox
-    
-    // Disable Z-buffer to draw sky
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    
-    // Use skytex as texture and switch to skyprogram
-    glUseProgram(skyprogram);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, skytex);
-    
-    //Remove translation from skylookAt
-    mat4 skylookAT = camera;
-    skylookAT.m[3] = 0;
-    skylookAT.m[7] = 0;
-    skylookAT.m[11] = 0;
-    
-    //mat4 modelv = Mult(S(-0.8,1,1), modelView);
-    
-    // Send skylookAT to skyprogram
-    //glUniformMatrix4fv(glGetUniformLocation(skyprogram, "lookAT"), 1, GL_TRUE, skylookAT.m);
-    
-    // Sky
-    glUniformMatrix4fv(glGetUniformLocation(skyprogram, "mdlMatrix"),1, GL_TRUE, modelView.m);
-    DrawModel(skybox, skyprogram, "in_Position", NULL, "in_TexCoord");
-    printError("sky shader");
-    
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    
-    
-    glUseProgram(program);
-    
-    
-    
-    
-    
-    
-    
-    //DrawModel(game_->right_track, program, "inPosition", "inNormal", "inTexCoord");
+
 
     //sphere
     glBindTexture(GL_TEXTURE_2D, tex2);
@@ -217,6 +216,10 @@ void display(void)
     //    GLfloat y_pos_des = height_controll(x_pos, z_pos,&ttex,tm)+0.1;
     //    y_pos -= (y_pos - y_pos_des)/1*0.5;
     game_->update();
+    if (game_->generate_terrain_bool) {
+        NewTerrain(game_->x_pos);
+        game_->generate_terrain_bool = false;
+    }
 
     //trans = T(0,0,0); // <<< --  Vart spheren är
     //rot = Rx(0);
@@ -266,7 +269,68 @@ void display(void)
     DrawModel(LegR,program,"inPosition","inNormal","inTexCoord");
     
     
+    //Lava
+    glBindTexture(GL_TEXTURE_2D, lavatex);
+    glActiveTexture(GL_TEXTURE0);
     
+    lavatot = Mult(T(0.0,(game_->y_pos_t),0.0),lavatot);
+    lavatot = Mult(lavatot, skyrot);
+    
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, lavatot.m);
+    DrawModel(Lava,program,"inPosition","inNormal","inTexCoord");
+    
+    
+    
+    //BOOSTERS
+    // ---------------------- ______________------------------
+    //printf("b1 \n");
+    
+    bool b_col = game_->maze->b_collision;
+    // printf("bool b_collision: %d \n", b_col );
+    
+    if (b_col == false){
+        
+        game_->boost_collision();
+        draw_boost(game_->maze);
+        b_col = game_->maze->b_collision;
+        if (b_col == true) { // if collision give points
+            time_count += 100;
+            time_boost = (3*(1+game_->ball_speed))*(1/0.02);
+            std::cout << "tB = " << time_boost << std::endl;
+            if (game_->maze->boost == 1) { //if speed
+                game_->ball_speed += 1;
+            }
+            else{ // if imortality
+                game_->imortality = true;
+            }
+        }
+        
+    }
+
+    draw_boost(game_->maze->right);
+    draw_boost(game_->maze->left);
+    
+    
+
+    
+    //  printf("obstacle main%d \n", obstacle );
+    //  printf("obstaclex main %d \n", obstacle_x_pos );
+
+    draw_obsticle(game_->maze);
+        draw_obsticle(game_->maze->left);
+        draw_obsticle(game_->maze->right);
+    
+    
+    if (game_->dead) {
+        sfSetRasterSize(600, 200);
+        sfDrawString(250, 90, "GAME OVER");
+        
+        GLfloat time_score = time_count;
+        snprintf(buffer, 50, "%f", time_score);
+        sfDrawString(220, 110, "Score: ");
+        sfDrawString(290, 110, buffer);
+    }
+
    
     printError("display 2");
     
@@ -316,10 +380,19 @@ void GenerateTerrain(Maze* maze)
 {
     GLfloat b;
     GLfloat skirt = 0;
+    
+    int pit_start = 2000;
+    
+    if (maze->obstacle == 0) {
+        pit_start = maze->obstacle_x_pos - 5;
+    }
+    
+
+    
     int x, z;
-    int width_g = width_, height_g = height_;
-    maze->length = width_g;
-    maze->width = height_g;
+    int height_g = height_;
+    int width_g = maze->length;
+    maze->width = height_g-1;
     
     int vertexCount = width_g * height_g;
     int triangleCount = (width_g-1) * (height_g-1) * 2;
@@ -330,28 +403,36 @@ void GenerateTerrain(Maze* maze)
     GLfloat *texCoordArray = new GLfloat[sizeof(GLfloat) * 2 * vertexCount];
     GLuint *indexArray = new GLuint[sizeof(GLuint) * triangleCount*3];
     
-    GLfloat last_b;
+    GLfloat last_b, pit = 0;
     
     for (x = 0; x < width_g; x++)
         for (z = 0; z < height_g; z++)
         {
-            if (z < 2 || z > height_g -3) {
-                if (z == 0 || z == height_g -1) {
-                    skirt = 3;
-                }
-                else
-                    skirt = 1;
+            //if (z < 2 || z > height_g -2) {
+            if (z == 0 || z == height_g -1) {
+                skirt = 1.5;
+                //  }
+                //else
+                //  skirt = 1;
             }
-            else
+            else{
                 skirt = 0;
+            }
+            
+            if (x > pit_start && x < pit_start + 10) {
+                pit = 30;
+            }
+            else{
+                pit = 0;
+            }
             // Vertex array. You need to scale this properly
             vertexArray[(x + z * width_g)*3 + 0] = x / 1.0;
             if (x < width_g - height_g) {
-                vertexArray[(x + z * width_g)*3 + 1] = 1.0*b - skirt; //+ x*0.1;
-                last_b = vertexArray[(x + z * width_g)*3 + 1] + skirt;
+                vertexArray[(x + z * width_g)*3 + 1] = 1.0*b - skirt - pit; //+ x*0.1;
+                last_b = vertexArray[(x + z * width_g)*3 + 1] + skirt + pit;
             }
             else{
-                vertexArray[(x + z * width_g)*3 + 1] = last_b - skirt;
+                vertexArray[(x + z * width_g)*3 + 1] = last_b - skirt - pit;
             }
             vertexArray[(x + z * width_g)*3 + 2] = z / 1.0;
             
@@ -381,8 +462,8 @@ void GenerateTerrain(Maze* maze)
             normalArray[(x + z * width_g)*3 + 2] = normalvektor.z;
             
             // Texture coordinates. You may want to scale them.
-            texCoordArray[(x + z * width_g)*2 + 0] = x; // (float)x / width_g;
-            texCoordArray[(x + z * width_g)*2 + 1] = z; // (float)z / height_g;
+            texCoordArray[(x + z * width_g)*2 + 0] = 2.0*(float)x / width_g;
+            texCoordArray[(x + z * width_g)*2 + 1] = 2.0*(float)z / height_g;
         }
     for (x = 0; x < width_g-1; x++)
         for (z = 0; z < height_g-1; z++)
@@ -418,12 +499,18 @@ void GenerateTerrain(Maze* maze)
 void init(void)
 {
     
+    printf("i1 \n");
+    sfMakeRasterFont();
+    
     sphere = LoadModelPlus("./OBJ/groundsphere.obj");
     
     camera = lookAt(0.0,2.0,-8.0,
                     0.0,0.0,0.0,
                     0.0,1.0,0.0);
+    srand (time(NULL));
     
+    skytot = T(0.0,0.0,0.0);
+    lavatot = Mult(T(0,-1, 0), S(20, 0, 20));
     
     // GL inits
     glClearColor(0.2,0.2,0.5,0);
@@ -431,8 +518,9 @@ void init(void)
     glDisable(GL_CULL_FACE);
     printError("GL inits");
     
-    projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 150.0);
+    projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
     
+    printf("i2 \n");
     // Load and compile shader
     program = loadShaders("./Shader/terrain.vert", "./Shader/terrain.frag");
     skyprogram = loadShaders("./Shader/sky.vert", "./Shader/sky.frag");
@@ -441,17 +529,18 @@ void init(void)
     
     glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
     glUniform1i(glGetUniformLocation(program, "tex"), 0); // Texture unit 0
-    LoadTGATextureSimple("./TGA/maskros512.tga", &tex1);
+    LoadTGATextureSimple("./TGA/lavaroad.tga", &tex1);
     LoadTGATextureSimple("./TGA/conc.tga", &tex2);
     
 
-    
+    printf("i3 \n");
     // Load terrain data
     InitTerrain();
     
     LoadTGATextureData("./TGA/fft-terrain.tga", &ttex);
     printError("init terrain");
     
+    //Body
     LoadTGATextureSimple("./TGA/tex_01_lfy_weapon1out.tga", &tex_head);
     LoadTGATextureSimple("./TGA/red.tga", &tex_body);
     
@@ -460,17 +549,33 @@ void init(void)
     Body = LoadModelPlus("./OBJ/groundsphere.obj"); //Load Body & head
     ArmR = LoadModelPlus("./OBJ/armr.obj");//Load Right Arm
     ArmL = LoadModelPlus("./OBJ/arml.obj");//Load Right Arm
+    printf("i4 \n");
+    //boost & Obst
+    LoadTGATextureSimple("./TGA/red.tga", &startex);
+    LoadTGATextureSimple("./TGA/speed.tga", &speedtex);
+    LoadTGATextureSimple("./TGA/imortal.tga", &imortaltex);
+    //LoadTGATextureSimple("./TGA/spike.tga", &gatetex);
+    LoadTGATextureSimple("./TGA/dirt.tga", &gatetex); //NY ANDREAS
+
+    Star = LoadModelPlus("./OBJ/groundsphere.obj");//extra points
+    SpeedObj = LoadModelPlus("./OBJ/groundsphere.obj");//speed
+    Imortal = LoadModelPlus("./OBJ/groundsphere.obj");//speed
+
+    //Gate = LoadModelPlus("./OBJ/spike.obj");//gate
+    Gate = LoadModelPlus("./OBJ/gatecube.obj");//gate //NY ANDREREAS
+
     
-    //skybox = LoadModelPlus("./OBJ/cubeplus.obj");//Load skybox
     
-    // Load skybox data
+    // Lava Ground
+    Lava = LoadModelPlus("./OBJ/ground.obj");//load ground aka lava
+    LoadTGATextureSimple("./TGA/lava.tga", &lavatex); //load the lava texture
+    
+    //Sky
+    skybox = LoadModelPlus("./OBJ/cubeplus.obj");//Load skybox
     glUseProgram(skyprogram);
-    
     glUniformMatrix4fv(glGetUniformLocation(skyprogram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-    //LoadTGATextureSimple("./TGA/skybox2.tga", &skytex); 	// Texture unit 1
-    
+    LoadTGATextureSimple("./TGA/skybox2.tga", &skytex); 	// Texture unit 1
     glUseProgram(program);
-    //sfMakeRasterFont();
     
 }
 
@@ -485,8 +590,122 @@ void InitTerrain(){
     GenerateTerrain(game_->maze->right->right);
     GenerateTerrain(game_->maze->right->left);
  
-    game_->maze->generate_transform(0.0,-height_/2.0);
+    game_->maze->generate_transform(0.0,-(height_-1.0)/2.0);
     
     
+}
+
+
+void NewTerrain(GLfloat pos){
+    
+    std::cout << "New Terrrain!!  KOM IHÅG ATT DESTUERA MODELLERNA NÄR MAN TILLSÄTTER NY!!!!!! " << std::endl;
+    
+
+
+    
+    GenerateTerrain(game_->maze->left->left);
+    GenerateTerrain(game_->maze->left->right);
+    
+    GenerateTerrain(game_->maze->right->right);
+    GenerateTerrain(game_->maze->right->left);
+    
+    game_->maze->generate_transform(pos,-(height_-1.0)/2.0);
+    //game_->maze->get_all_pos();
+    
+    
+}
+
+
+void draw_boost(Maze* maze){
+    
+    mat4 total;
+    int boost = maze->boost;
+    int boost_x_pos = maze->boost_x_pos;
+    int boost_z_pos = maze->boost_z_pos;
+    mat4 boost_pos = T(boost_x_pos, 5, boost_z_pos);
+    
+    if (boost == 0) {
+        
+        //Star
+        glBindTexture(GL_TEXTURE_2D, startex);
+        glActiveTexture(GL_TEXTURE0);
+        total = maze->get_total();
+        total = Mult(total, boost_pos); //T(20,5,4));
+        total = Mult(total, Rx(M_PI_2));
+        total = Mult(total, Rz(M_PI_2));
+        total = Mult(total, S(0.5, 0.5, 0.5));
+        
+        glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+        DrawModel(Star,program,"inPosition","inNormal","inTexCoord");
+    }
+    
+    else if (boost == 1) {
+        //speed
+        glBindTexture(GL_TEXTURE_2D, speedtex);
+        glActiveTexture(GL_TEXTURE0);
+        total = maze->get_total();
+        total = Mult(total, boost_pos); //T(5,5,8));
+        //total = Mult(total, S(0.1, 0.1, 0.1));
+        total = Mult(total, S(0.5, 0.5, 0.5));
+        
+        glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+        DrawModel(SpeedObj,program,"inPosition","inNormal","inTexCoord");
+    }
+    
+    
+    else if ( boost == 2){
+        //imortal
+        glBindTexture(GL_TEXTURE_2D, imortaltex);
+        glActiveTexture(GL_TEXTURE0);
+        total = maze->get_total();
+        total = Mult(total, boost_pos); //T(8,4.5,8));
+        //total = Mult(total, S(0.3, 0.3, 0.3));
+        total = Mult(total, S(0.5, 0.5, 0.5));
+        glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+        DrawModel(Imortal,program,"inPosition","inNormal","inTexCoord");
+    }
+}
+
+void draw_obsticle(Maze* maze){
+    //gate
+    
+    //OBSTACLES
+    int obstacle = maze->obstacle;
+    int obstacle_x_pos = maze->obstacle_x_pos;
+    mat4 obstacle_pos = T(obstacle_x_pos, 4, 8);
+    
+    if ( obstacle == 1){ //BYT ALLT ANDREAS
+        //gate
+        glBindTexture(GL_TEXTURE_2D, gatetex);
+        glActiveTexture(GL_TEXTURE0);
+        
+        //hö pelare
+        mat4 total = maze->get_total();
+        total = Mult(total, obstacle_pos);
+        total = Mult(total,S(2 , 6 , 2));
+        total = Mult(total, T(0,-0.25,2));
+        glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+        DrawModel(Gate,program,"inPosition","inNormal","inTexCoord");
+        
+        //vänstra pelare
+        total = maze->get_total();
+        total = Mult(total, obstacle_pos);
+        total = Mult(total,S(2 , 6 , 2));
+        total = Mult(total, T(0,-0.25,-2));
+        glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+        DrawModel(Gate,program,"inPosition","inNormal","inTexCoord");
+        
+        //tak
+        total = maze->get_total();
+        total = Mult(total, obstacle_pos);
+        total = Mult(total,S(2 , 2 , 6));
+        total = Mult(total, T(0,0.27,0));
+        total = Mult(total, Ry(M_PI_2));
+        total = Mult(total, Rz(M_PI_2));
+        glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+        DrawModel(Gate,program,"inPosition","inNormal","inTexCoord");
+        
+        
+    }
 }
 

@@ -9,7 +9,7 @@ in mat3 normalMatrix1;
 
 void main(void)
 {
-    const vec3 light = vec3(0.0, 1.0, 2.0);
+    const vec3 light = vec3(0.0, 2.0, 0.0);
     float shade2 = dot(normalize(shade), vec4(light,1));
-    outColor = vec4(shade2,shade2,shade2,1)/4 + 2.5*texture(tex, texCoord)/4;
+    outColor = texture(tex, texCoord);
 }
